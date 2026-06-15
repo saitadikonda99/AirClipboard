@@ -14,7 +14,7 @@ app.on('window-all-closed', (e) => e.preventDefault());
 
 // Set dock icon (macOS)
 if (process.platform === 'darwin') {
-  const iconPath = require('path').join(__dirname, '../../assets/icon.png');
+  const iconPath = require('path').join(__dirname, '../../assets/Icon.png');
   try { app.dock.setIcon(require('electron').nativeImage.createFromPath(iconPath)); } catch {}
 }
 
