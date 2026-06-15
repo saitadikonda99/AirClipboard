@@ -46,9 +46,11 @@
   "build": {
     "appId": "com.airclipboard.app",
     "productName": "AirClipboard",
+    "icon": "assets/icon.png",
     "mac": {
       "target": "dmg",
-      "category": "public.app-category.utilities"
+      "category": "public.app-category.utilities",
+      "icon": "assets/icon.icns"
     },
     "files": [
       "dist/**/*",

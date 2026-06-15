@@ -12,6 +12,12 @@ const { showHUD } = require('./notification/hudWindow');
 app.setName('AirClipboard');
 app.on('window-all-closed', (e) => e.preventDefault());
 
+// Set dock icon (macOS)
+if (process.platform === 'darwin') {
+  const iconPath = require('path').join(__dirname, '../../assets/icon.png');
+  try { app.dock.setIcon(require('electron').nativeImage.createFromPath(iconPath)); } catch {}
+}
+
 let mainWindow = null;
 let pendingPairWs = null;
 
