@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Clippr</string>
+    <string name="app_name">AirClipboard</string>
     <string name="status_searching">Searching for devices…</string>
     <string name="status_connected">Connected to %1$s</string>
-    <string name="sync_notification">Clippr is syncing clipboard</string>
+    <string name="sync_notification">AirClipboard is syncing clipboard</string>
 </resources>

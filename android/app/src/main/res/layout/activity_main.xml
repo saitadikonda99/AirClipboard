@@ -37,7 +37,7 @@
             android:fontFamily="sans-serif-medium" />
 
         <TextView
-            android:text="✂ Clippr"
+            android:text="AirClipboard"
             android:textSize="16sp"
             android:textColor="#007AFF"
             android:fontFamily="sans-serif-medium"

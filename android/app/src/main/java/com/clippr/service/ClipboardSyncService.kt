@@ -34,10 +34,10 @@ class ClipboardSyncService : Service() {
 
     private var wsClient: ClipprWebSocketClient? = null
     private val triedHosts = mutableSetOf<String>()
+    private var clipboardListenerStarted = false
 
     var statusCallback: ((SyncStatus) -> Unit)? = null
     var historyCallback: (() -> Unit)? = null
-    var pairRequestCallback: ((deviceName: String) -> Unit)? = null
 
     var currentStatus = SyncStatus()
         private set
@@ -63,26 +63,39 @@ class ClipboardSyncService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForeground(NOTIF_ID, buildNotification("Searching for devices…"))
-        // Try manual IP first, fall back to mDNS discovery
+
+        // Disconnect any existing client and reset state
+        wsClient?.disconnect()
+        wsClient = null
+        triedHosts.clear()
+        nsdManager.stopDiscovery()
+        updateStatus(SyncStatus(false))
+
         val prefs = getSharedPreferences("clippr_connect", MODE_PRIVATE)
         val manualIp = prefs.getString("manual_ip", null)
         val manualPort = prefs.getInt("manual_port", 8585)
+
         if (!manualIp.isNullOrEmpty()) {
-            Log.d(TAG, "Using manual IP: $manualIp:$manualPort")
+            Log.d(TAG, "Connecting to manual IP: $manualIp:$manualPort")
+            triedHosts.add(manualIp) // prevent NSD from double-connecting same host
             connectTo(manualIp, manualPort)
         }
+
         startDiscovery()
-        startClipboardListener()
+
+        if (!clipboardListenerStarted) {
+            startClipboardListener()
+            clipboardListenerStarted = true
+        }
+
         return START_STICKY
     }
 
     private fun startDiscovery() {
         nsdManager.startDiscovery { host, port ->
             if (triedHosts.contains(host)) return@startDiscovery
-            else {
-                triedHosts.add(host)
-                connectTo(host, port)
-            }
+            triedHosts.add(host)
+            connectTo(host, port)
         }
     }
 
@@ -95,6 +108,7 @@ class ClipboardSyncService : Service() {
             deviceName = myName,
             onConnected = { Log.d(TAG, "WS connected to $host:$port") },
             onDisconnected = {
+                Log.d(TAG, "WS disconnected from $host:$port")
                 triedHosts.remove(host)
                 updateStatus(SyncStatus(false))
                 updateNotification("Searching for devices…")
@@ -102,7 +116,6 @@ class ClipboardSyncService : Service() {
             onMessage = { msg -> handleMessage(msg) }
         )
 
-        // Check if already trusted, set key
         wsClient = client
         client.connect(host, port)
     }
@@ -124,13 +137,13 @@ class ClipboardSyncService : Service() {
             MsgType.PAIR_REJECT -> {
                 Log.d(TAG, "Pair rejected")
                 wsClient?.disconnect()
+                wsClient = null
                 updateStatus(SyncStatus(false))
             }
             MsgType.CLIPBOARD -> {
                 val key = wsClient?.sharedKey ?: return
                 try {
                     val text = CryptoManager.decrypt(msg.payload, key)
-                    // Prevent loop
                     if (msg.source == pairingManager.getMyDeviceId()) return
                     clipboardListener.setClipboard(text)
                     scope.launch {
@@ -149,7 +162,7 @@ class ClipboardSyncService : Service() {
                     Log.e(TAG, "Decrypt error: ${e.message}")
                 }
             }
-            MsgType.PING -> { /* handled by OkHttp pings */ }
+            MsgType.PING -> { }
         }
     }
 
@@ -187,7 +200,7 @@ class ClipboardSyncService : Service() {
         val intent = Intent(this, MainActivity::class.java)
         val pi = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Clippr")
+            .setContentTitle("AirClipboard")
             .setContentText(text)
             .setSmallIcon(android.R.drawable.ic_menu_share)
             .setContentIntent(pi)

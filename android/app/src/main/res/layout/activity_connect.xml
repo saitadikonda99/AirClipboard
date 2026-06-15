@@ -31,6 +31,32 @@
             android:layout_marginTop="8dp"
             android:lineSpacingMultiplier="1.4" />
 
+        <!-- Scan QR Button -->
+        <Button
+            android:id="@+id/btnScanQr"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginTop="24dp"
+            android:text="Scan QR Code"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#34C759"
+            android:drawableStart="@android:drawable/ic_menu_camera"
+            android:drawablePadding="8dp"
+            android:stateListAnimator="@null"
+            style="@style/Widget.MaterialComponents.Button" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="4dp"
+            android:text="— or enter IP manually —"
+            android:textSize="12sp"
+            android:textColor="#C7C7CC"
+            android:gravity="center" />
+
         <!-- IP Input Card -->
         <LinearLayout
             android:layout_width="match_parent"

@@ -94,6 +94,11 @@ ipcMain.handle('get-connect-info', () => {
   return { ip, port: 8585 };
 });
 
+ipcMain.handle('get-qr-code', async (_, value) => {
+  const QRCode = require('qrcode');
+  return await QRCode.toDataURL(value, { margin: 2, width: 200, color: { dark: '#1c1c1e', light: '#ffffff' } });
+});
+
 ipcMain.handle('get-history', () => history.getHistory());
 ipcMain.handle('get-devices', () => wsServer.getConnectedDevices());
 ipcMain.handle('get-device-info', () => ({

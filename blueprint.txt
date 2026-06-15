@@ -1,0 +1,389 @@
+Sai, here's a blueprint you can directly give to Claude Code.
+
+Projects like UniClipboard and other LAN clipboard sync tools generally use **local network discovery + WebSockets + clipboard listeners** to provide instant syncing without a cloud server. ([GitHub][1])
+
+# Project Name
+
+# Goal
+
+Create a Universal Clipboard between Android and macOS.
+
+Requirements:
+
+* No internet
+* No accounts
+* Same Wi-Fi only
+* Auto-discover devices
+* Copy on Android → Paste on Mac
+* Copy on Mac → Paste on Android
+* Near-instant sync (<500ms)
+* Runs in background
+
+---
+
+# Tech Stack
+
+## Mac
+
+* Electron
+* React
+* Node.js
+* ws
+* bonjour (mDNS)
+* clipboardy
+* electron-store
+
+## Android
+
+* Kotlin
+* ClipboardManager
+* OkHttp WebSocket
+* NSDManager (Network Service Discovery)
+* Room Database
+
+---
+
+# Folder Structure
+
+### Mac
+
+```txt
+desktop/
+├── src/
+│   ├── main/
+│   │   ├── websocket/
+│   │   ├── discovery/
+│   │   ├── clipboard/
+│   │   ├── tray/
+│   │   └── security/
+│   ├── renderer/
+│   └── shared/
+```
+
+### Android
+
+```txt
+android/
+├── app/
+│   ├── clipboard/
+│   ├── websocket/
+│   ├── discovery/
+│   ├── pairing/
+│   ├── history/
+│   ├── database/
+│   └── service/
+```
+
+---
+
+# Architecture
+
+```txt
+Android
+     │
+Clipboard Listener
+     │
+WebSocket Client
+     │
+──────── Wi-Fi ────────
+     │
+WebSocket Server
+     │
+Clipboard Writer
+     │
+Mac
+```
+
+---
+
+# Phase 1: Local Discovery
+
+### Mac
+
+Advertise service:
+
+```txt
+Service Name:
+Clippr-MacBook
+
+Service Type:
+_clippr._tcp
+
+Port:
+8585
+```
+
+### Android
+
+Scan for:
+
+```txt
+_clippr._tcp
+```
+
+Auto-connect.
+
+No IP addresses should be entered manually.
+
+---
+
+# Phase 2: Pairing
+
+First connection:
+
+Mac:
+
+```txt
+Pair with Galaxy S24?
+[Accept]
+```
+
+Generate:
+
+```txt
+8F3K-1P9X
+```
+
+Store:
+
+```json
+{
+  "deviceId": "mac-123",
+  "deviceName": "MacBook Pro",
+  "trusted": true
+}
+```
+
+---
+
+# Phase 3: Clipboard Listener
+
+### Android
+
+```kotlin
+clipboard.addPrimaryClipChangedListener {
+}
+```
+
+### Mac
+
+Poll every 300ms:
+
+```js
+clipboard.read()
+```
+
+Save:
+
+```txt
+lastClipboard
+```
+
+---
+
+# Phase 4: Message Protocol
+
+```json
+{
+  "type": "clipboard",
+  "id": "uuid",
+  "source": "android-123",
+  "timestamp": 1750012345,
+  "mimeType": "text/plain",
+  "payload": "Hello World"
+}
+```
+
+---
+
+# Phase 5: Receive Clipboard
+
+### Android
+
+```kotlin
+clipboard.setPrimaryClip(...)
+```
+
+### Mac
+
+```js
+await clipboard.write(text);
+```
+
+---
+
+# Prevent Infinite Loops
+
+Bad:
+
+```txt
+Mac
+↓
+Android
+↓
+Mac
+↓
+Android
+```
+
+Good:
+
+```json
+{
+  "id": "abc123",
+  "source": "mac-123"
+}
+```
+
+Ignore:
+
+```txt
+if (message.source === myDeviceId)
+    return;
+```
+
+---
+
+# Security
+
+Generate:
+
+```txt
+deviceKey
+```
+
+Encrypt payload:
+
+```txt
+AES-256-GCM
+```
+
+Only paired devices can decrypt.
+
+---
+
+# Clipboard History
+
+Store:
+
+```txt
+id
+content
+timestamp
+source
+type
+```
+
+History:
+
+```txt
+Copied from Galaxy S24
+npm install express
+
+Copied from MacBook
+https://github.com
+```
+
+---
+
+# System Tray App
+
+Tray menu:
+
+```txt
+Clippr
+────────────
+Connected:
+✓ Galaxy S24
+
+Clipboard History
+Settings
+Quit
+```
+
+---
+
+# Android Service
+
+Foreground service:
+
+```txt
+Clippr is syncing clipboard
+Connected to MacBook Pro
+```
+
+---
+
+# V1 Features
+
+✅ Text clipboard sync
+✅ Auto-discovery
+✅ Same Wi-Fi only
+✅ Pairing system
+✅ Encryption
+✅ Clipboard history
+✅ Background sync
+
+---
+
+# V2 Features
+
+✅ Images
+✅ Files
+✅ QR pairing
+✅ Multiple devices
+✅ Offline queue
+✅ Clipboard search
+✅ Drag and drop
+
+---
+
+# V3 Features
+
+✅ Nearby Wi-Fi Direct
+✅ End-to-end encrypted P2P outside LAN
+✅ Browser extension
+✅ Keyboard shortcuts
+✅ Share links instantly
+
+---
+
+# Prompt for Claude Code
+
+```txt
+Build a project called Clippr.
+
+Goal:
+Create a Universal Clipboard between Android and macOS.
+
+Requirements:
+1. Same Wi-Fi only.
+2. No cloud server.
+3. Auto-discover devices using mDNS/Bonjour.
+4. macOS app built with Electron, React, and Node.js.
+5. Android app built with Kotlin.
+6. Use WebSockets for communication.
+7. Detect clipboard changes on both devices.
+8. Sync text clipboard in real time.
+9. Prevent infinite clipboard loops.
+10. Pair devices and remember trusted devices.
+11. Encrypt clipboard payloads using AES-256-GCM.
+12. Maintain clipboard history.
+13. Electron app runs as a tray application.
+14. Android app runs as a foreground service.
+15. Use clean architecture and separate modules for discovery, websocket, clipboard, pairing, security, and history.
+
+Generate:
+- Project structure
+- Database schema
+- API contracts
+- WebSocket protocol
+- State diagrams
+- Sequence diagrams
+- Full implementation plan
+- Production-ready code step by step
+```
+
+This is a strong portfolio project because it combines **desktop development, mobile development, networking, WebSockets, mDNS discovery, encryption, and real-time systems engineering** in one product.
+
+[1]: https://github.com/topics/clipboard-sync?utm_source=chatgpt.com "clipboard-sync · GitHub Topics"

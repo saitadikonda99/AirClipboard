@@ -10,19 +10,17 @@ function timeAgo(ts) {
   return `${Math.floor(diff / 3600000)}h ago`;
 }
 
-// Minimal QR code generator (pure JS, no library)
 function QRCode({ value, size = 160 }) {
-  const [url, setUrl] = useState('');
+  const [dataUrl, setDataUrl] = useState('');
   useEffect(() => {
-    // Use a data URI canvas approach via Google Charts API equivalent
-    // We'll encode using a simple pattern for the connection string
-    const encoded = encodeURIComponent(value);
-    setUrl(`https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encoded}&bgcolor=ffffff&color=1c1c1e&margin=10`);
-  }, [value, size]);
-  return url ? (
-    <img src={url} width={size} height={size} style={{ borderRadius: 12, display: 'block' }} alt="QR" />
+    if (value) clippr.getQrCode(value).then(setDataUrl);
+  }, [value]);
+  return dataUrl ? (
+    <img src={dataUrl} width={size} height={size} style={{ borderRadius: 12, display: 'block' }} alt="QR" />
   ) : (
-    <div style={{ width: size, height: size, background: 'rgba(120,120,128,0.1)', borderRadius: 12 }} />
+    <div style={{ width: size, height: size, background: 'rgba(120,120,128,0.1)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: '#8e8e93' }}>
+      Loading…
+    </div>
   );
 }
 
