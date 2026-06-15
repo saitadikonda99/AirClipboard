@@ -52,9 +52,12 @@ app.whenReady().then(() => {
       pendingPairWs = ws;
       if (mainWindow) {
         mainWindow.show();
+        mainWindow.focus();
+        mainWindow.setAlwaysOnTop(true);
         mainWindow.webContents.send('pair-request', { deviceId, deviceName, code });
+        setTimeout(() => { if (mainWindow) mainWindow.setAlwaysOnTop(false); }, 3000);
       }
-      showHUD({ from: 'Clippr', text: `Pair request from ${deviceName}` });
+      showHUD({ from: 'AirClipboard', text: `Pair request from ${deviceName}` });
     },
     onClipboardReceived: (entry) => {
       // Show HUD notification like macOS battery alert
