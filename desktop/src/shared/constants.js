@@ -1,10 +1,10 @@
-const SERVICE_NAME = 'AirClipboard';
-const SERVICE_TYPE = '_clippr._tcp';
-const PORT = 8585;
-const POLL_INTERVAL_MS = 300;
-const MAX_HISTORY = 50;
+export const SERVICE_NAME = 'AirClipboard';
+export const SERVICE_TYPE = '_clippr._tcp';
+export const PORT = 8585;
+export const POLL_INTERVAL_MS = 300;
+export const MAX_HISTORY = 50;
 
-const MSG_TYPE = {
+export const MSG_TYPE = {
   CLIPBOARD: 'clipboard',
   PAIR_REQUEST: 'pair_request',
   PAIR_ACCEPT: 'pair_accept',
@@ -12,5 +12,3 @@ const MSG_TYPE = {
   PING: 'ping',
   PONG: 'pong',
 };
-
-module.exports = { SERVICE_NAME, SERVICE_TYPE, PORT, POLL_INTERVAL_MS, MAX_HISTORY, MSG_TYPE };

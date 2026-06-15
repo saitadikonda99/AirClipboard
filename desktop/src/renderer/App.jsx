@@ -42,18 +42,26 @@ export default function App() {
   const [pairRequest, setPairRequest] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
   const [ipCopied, setIpCopied] = useState(false);
+  const [loginItem, setLoginItem] = useState(false);
 
   useEffect(() => {
     clippr.getHistory().then(setHistory);
     clippr.getDevices().then(setDevices);
     clippr.getDeviceInfo().then(setDeviceInfo);
     clippr.getConnectInfo().then(setConnectInfo);
+    clippr.getLoginItem().then(setLoginItem);
     clippr.on('history-update', setHistory);
     clippr.on('devices-update', setDevices);
     clippr.on('pair-request', (req) => { setPairRequest(req); setView('pair'); });
     clippr.on('show-history', () => setView('history'));
     clippr.on('show-settings', () => setView('devices'));
   }, []);
+
+  async function handleToggleLoginItem() {
+    const next = !loginItem;
+    await clippr.setLoginItem(next);
+    setLoginItem(next);
+  }
 
   function handleCopy(content, id) {
     navigator.clipboard?.writeText(content);
@@ -88,6 +96,7 @@ export default function App() {
             <span className={`pulse-dot ${isConnected ? 'on' : 'off'}`} />
             <span className="status-text">{isConnected ? 'Online' : 'Offline'}</span>
           </div>
+          <button className="close-btn" onClick={() => window.close()} title="Close">✕</button>
         </div>
         <div className="device-name-row">
           {isConnected
@@ -243,6 +252,24 @@ export default function App() {
             <div className="info-row">
               <span className="info-key">IP Address</span>
               <span className="info-val mono">{connectInfo?.ip}</span>
+            </div>
+          </div>
+
+          <div className="section-header" style={{ background: 'transparent', padding: '16px 0 8px' }}>
+            <span className="section-label">Preferences</span>
+          </div>
+          <div className="info-card">
+            <div className="info-row">
+              <div>
+                <div className="info-key">Launch at Login</div>
+                <div style={{ fontSize: 11, color: '#9B9B9B', marginTop: 2 }}>Start AirClipboard when your Mac boots</div>
+              </div>
+              <button
+                className={`toggle-btn ${loginItem ? 'on' : ''}`}
+                onClick={handleToggleLoginItem}
+              >
+                <span className="toggle-knob" />
+              </button>
             </div>
           </div>
 

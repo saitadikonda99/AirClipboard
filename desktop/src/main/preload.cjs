@@ -10,6 +10,8 @@ contextBridge.exposeInMainWorld('clippr', {
   getQrCode: (value) => ipcRenderer.invoke('get-qr-code', value),
   acceptPair: () => ipcRenderer.send('pair-accept'),
   rejectPair: () => ipcRenderer.send('pair-reject'),
+  getLoginItem: () => ipcRenderer.invoke('get-login-item'),
+  setLoginItem: (enabled) => ipcRenderer.invoke('set-login-item', enabled),
   on: (channel, fn) => {
     const allowed = ['pair-request', 'history-update', 'devices-update', 'show-history', 'show-settings'];
     if (allowed.includes(channel)) ipcRenderer.on(channel, (_, ...args) => fn(...args));

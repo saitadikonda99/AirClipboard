@@ -1,23 +1,20 @@
-const Store = require('electron-store');
-const { MAX_HISTORY } = require('../../shared/constants');
+import { createStore } from '../store.js';
+import { MAX_HISTORY } from '../../shared/constants.js';
 
-const store = new Store({ name: 'clippr-history' });
+const store = createStore('clippr-history');
 
-function getHistory() {
+export function getHistory() {
   return store.get('items', []);
 }
 
-function addEntry(entry) {
+export function addEntry(entry) {
   const items = getHistory();
-  // Avoid duplicate consecutive entries
-  if (items.length > 0 && items[0].payload === entry.payload) return;
+  if (items.length > 0 && items[0].content === entry.content) return;
   items.unshift(entry);
   if (items.length > MAX_HISTORY) items.splice(MAX_HISTORY);
   store.set('items', items);
 }
 
-function clearHistory() {
+export function clearHistory() {
   store.set('items', []);
 }
-
-module.exports = { getHistory, addEntry, clearHistory };

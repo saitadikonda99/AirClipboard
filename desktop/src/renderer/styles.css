@@ -31,7 +31,7 @@ body {
 /* ── Top App Bar ── */
 .titlebar {
   background: #1259C3;
-  padding: 40px 16px 0;
+  padding: 14px 16px 0;
   flex-shrink: 0;
   -webkit-app-region: drag;
 }
@@ -39,7 +39,7 @@ body {
 .titlebar-inner {
   display: flex;
   align-items: center;
-  height: 48px;
+  height: 44px;
   -webkit-app-region: no-drag;
 }
 
@@ -82,6 +82,55 @@ body {
   color: #FFFFFF;
   white-space: nowrap;
 }
+
+/* ── Close button ── */
+.close-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.85);
+  border-radius: 50%;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+  flex-shrink: 0;
+  transition: background 0.15s;
+  -webkit-app-region: no-drag;
+}
+.close-btn:hover { background: rgba(255,255,255,0.28); }
+
+/* ── Toggle Switch ── */
+.toggle-btn {
+  width: 44px;
+  height: 26px;
+  border-radius: 13px;
+  border: none;
+  background: #D1D1D6;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+  padding: 0;
+}
+.toggle-btn.on { background: #1259C3; }
+
+.toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+  transition: transform 0.2s;
+  display: block;
+}
+.toggle-btn.on .toggle-knob { transform: translateX(18px); }
 
 /* ── Device name row ── */
 .device-name-row {

@@ -1,21 +1,27 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
-const path = require('path');
+import electronMain from 'electron/main';
+const { app, BrowserWindow, ipcMain } = electronMain;
+import path from 'path';
+import os from 'os';
+import { fileURLToPath } from 'url';
+import { v4 as uuidv4 } from 'uuid';
+import QRCode from 'qrcode';
 
-const wsServer = require('./websocket/server');
-const bonjour = require('./discovery/bonjour');
-const clipboardMonitor = require('./clipboard/monitor');
-const trayManager = require('./tray/tray');
-const history = require('./history/history');
-const pairing = require('./pairing/pairing');
-const { showHUD } = require('./notification/hudWindow');
+import * as wsServer from './websocket/server.js';
+import * as bonjour from './discovery/bonjour.js';
+import * as clipboardMonitor from './clipboard/monitor.js';
+import * as trayManager from './tray/tray.js';
+import * as history from './history/history.js';
+import * as pairing from './pairing/pairing.js';
+import { showHUD } from './notification/hudWindow.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 app.setName('AirClipboard');
 app.on('window-all-closed', (e) => e.preventDefault());
 
-// Set dock icon (macOS)
+// Menu bar app — no dock icon
 if (process.platform === 'darwin') {
-  const iconPath = require('path').join(__dirname, '../../assets/Icon.png');
-  try { app.dock.setIcon(require('electron').nativeImage.createFromPath(iconPath)); } catch {}
+  app.dock.hide();
 }
 
 let mainWindow = null;
@@ -24,20 +30,25 @@ let pendingPairWs = null;
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 400,
-    height: 560,
+    height: 580,
     show: false,
-    titleBarStyle: 'hiddenInset',
-    vibrancy: 'under-window',
-    visualEffectState: 'active',
-    backgroundColor: '#00000000',
+    frame: false,
+    resizable: false,
+    skipTaskbar: true,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, 'preload.cjs'),
     },
   });
 
-  mainWindow.loadFile(path.join(__dirname, '../../src/renderer/index.html'));
+  mainWindow.loadFile(path.join(__dirname, '../../dist/index.html'));
+
+  mainWindow.on('blur', () => {
+    if (mainWindow && !mainWindow.webContents.isDevToolsOpened()) {
+      mainWindow.hide();
+    }
+  });
 
   mainWindow.on('close', (e) => {
     e.preventDefault();
@@ -66,7 +77,6 @@ app.whenReady().then(() => {
       showHUD({ from: 'AirClipboard', text: `Pair request from ${deviceName}` });
     },
     onClipboardReceived: (entry) => {
-      // Show HUD notification like macOS battery alert
       showHUD({ from: entry.source, text: entry.content });
       if (mainWindow) mainWindow.webContents.send('history-update', history.getHistory());
     },
@@ -77,7 +87,7 @@ app.whenReady().then(() => {
   clipboardMonitor.startMonitoring((text) => {
     wsServer.broadcastClipboard(text);
     history.addEntry({
-      id: require('uuid').v4(),
+      id: uuidv4(),
       content: text,
       timestamp: Date.now(),
       source: pairing.getMyDeviceName(),
@@ -91,7 +101,6 @@ app.whenReady().then(() => {
 });
 
 ipcMain.handle('get-connect-info', () => {
-  const os = require('os');
   const nets = os.networkInterfaces();
   let ip = '127.0.0.1';
   for (const name of Object.keys(nets)) {
@@ -104,7 +113,6 @@ ipcMain.handle('get-connect-info', () => {
 });
 
 ipcMain.handle('get-qr-code', async (_, value) => {
-  const QRCode = require('qrcode');
   return await QRCode.toDataURL(value, { margin: 2, width: 200, color: { dark: '#1c1c1e', light: '#ffffff' } });
 });
 
@@ -123,6 +131,14 @@ ipcMain.on('pair-accept', () => {
 });
 ipcMain.on('pair-reject', () => {
   if (pendingPairWs) { wsServer.rejectPairing(pendingPairWs); pendingPairWs = null; }
+});
+
+ipcMain.handle('get-login-item', () => {
+  return app.getLoginItemSettings().openAtLogin;
+});
+ipcMain.handle('set-login-item', (_, enabled) => {
+  app.setLoginItemSettings({ openAtLogin: enabled });
+  return enabled;
 });
 
 app.on('before-quit', () => {

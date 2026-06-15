@@ -1,4 +1,4 @@
-const { POLL_INTERVAL_MS } = require('../../shared/constants');
+import { POLL_INTERVAL_MS } from '../../shared/constants.js';
 
 let lastClipboard = '';
 let pollTimer = null;
@@ -13,7 +13,7 @@ async function getClipboard() {
   }
 }
 
-async function setClipboard(text) {
+export async function setClipboard(text) {
   try {
     const clipboardy = await import('clipboardy');
     clipboardy.default.writeSync(text);
@@ -23,7 +23,7 @@ async function setClipboard(text) {
   }
 }
 
-function startMonitoring(onChange) {
+export function startMonitoring(onChange) {
   onChangeCallback = onChange;
   pollTimer = setInterval(async () => {
     const current = await getClipboard();
@@ -34,15 +34,15 @@ function startMonitoring(onChange) {
   }, POLL_INTERVAL_MS);
 }
 
-function stopMonitoring() {
+export function stopMonitoring() {
   if (pollTimer) {
     clearInterval(pollTimer);
     pollTimer = null;
   }
 }
 
-function setLastKnown(text) {
+export function setLastKnown(text) {
   lastClipboard = text;
 }
 
-module.exports = { startMonitoring, stopMonitoring, setClipboard, setLastKnown, getClipboard };
+export { getClipboard };
