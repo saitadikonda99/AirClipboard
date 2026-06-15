@@ -71,8 +71,10 @@ class ClipboardSyncService : Service() {
     private fun startDiscovery() {
         nsdManager.startDiscovery { host, port ->
             if (triedHosts.contains(host)) return@startDiscovery
-            triedHosts.add(host)
-            connectTo(host, port)
+            else {
+                triedHosts.add(host)
+                connectTo(host, port)
+            }
         }
     }
 
@@ -93,7 +95,6 @@ class ClipboardSyncService : Service() {
         )
 
         // Check if already trusted, set key
-        val existingKey = pairingManager.getDeviceKey("mac-placeholder")
         wsClient = client
         client.connect(host, port)
     }
