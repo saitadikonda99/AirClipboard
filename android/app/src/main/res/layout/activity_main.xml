@@ -83,11 +83,22 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <Button
+            android:id="@+id/btnConnect"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Connect to Mac"
+            android:textSize="13sp"
+            android:backgroundTint="#007AFF"
+            style="@style/Widget.MaterialComponents.Button" />
+
+        <Button
             android:id="@+id/btnClearHistory"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Clear History"
+            android:text="Clear"
             android:textSize="12sp"
+            android:layout_marginStart="8dp"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
 
     </LinearLayout>

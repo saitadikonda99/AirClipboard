@@ -29,6 +29,10 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.ConnectActivity"
+            android:exported="false" />
+
         <service
             android:name=".service.ClipboardSyncService"
             android:enabled="true"

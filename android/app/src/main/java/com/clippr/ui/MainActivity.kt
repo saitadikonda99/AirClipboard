@@ -54,6 +54,10 @@ class MainActivity : AppCompatActivity() {
         binding.recyclerHistory.layoutManager = LinearLayoutManager(this)
         binding.recyclerHistory.adapter = adapter
 
+        binding.btnConnect.setOnClickListener {
+            startActivity(android.content.Intent(this, ConnectActivity::class.java))
+        }
+
         binding.btnClearHistory.setOnClickListener {
             lifecycleScope.launch {
                 AppDatabase.getInstance(this@MainActivity).clipboardDao().clearAll()

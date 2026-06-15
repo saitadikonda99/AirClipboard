@@ -81,6 +81,19 @@ app.whenReady().then(() => {
   trayManager.createTray(mainWindow);
 });
 
+ipcMain.handle('get-connect-info', () => {
+  const os = require('os');
+  const nets = os.networkInterfaces();
+  let ip = '127.0.0.1';
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+      if (net.family === 'IPv4' && !net.internal) { ip = net.address; break; }
+    }
+    if (ip !== '127.0.0.1') break;
+  }
+  return { ip, port: 8585 };
+});
+
 ipcMain.handle('get-history', () => history.getHistory());
 ipcMain.handle('get-devices', () => wsServer.getConnectedDevices());
 ipcMain.handle('get-device-info', () => ({

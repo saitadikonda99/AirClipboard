@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F2F2F7"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <!-- Header -->
+        <TextView
+            android:text="Connect to Mac"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="#1C1C1E"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:letterSpacing="-0.02" />
+
+        <TextView
+            android:text="Enter your Mac's IP address shown in the AirClipboard Connect tab"
+            android:textSize="14sp"
+            android:textColor="#8E8E93"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:lineSpacingMultiplier="1.4" />
+
+        <!-- IP Input Card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="32dp"
+            android:background="@drawable/bg_glass_card"
+            android:padding="4dp">
+
+            <TextView
+                android:text="MAC IP ADDRESS"
+                android:textSize="11sp"
+                android:textColor="#8E8E93"
+                android:textStyle="bold"
+                android:letterSpacing="0.05"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="6dp" />
+
+            <EditText
+                android:id="@+id/etIp"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:hint="192.168.x.x"
+                android:textSize="18sp"
+                android:textColor="#1C1C1E"
+                android:textColorHint="#C7C7CC"
+                android:inputType="textNoSuggestions"
+                android:background="@android:color/transparent"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:fontFamily="monospace"
+                android:singleLine="true"
+                android:textCursorDrawable="@null" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:background="#E5E5EA"
+                android:layout_marginStart="12dp" />
+
+            <TextView
+                android:text="PORT"
+                android:textSize="11sp"
+                android:textColor="#8E8E93"
+                android:textStyle="bold"
+                android:letterSpacing="0.05"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="6dp" />
+
+            <EditText
+                android:id="@+id/etPort"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:hint="8585"
+                android:text="8585"
+                android:textSize="18sp"
+                android:textColor="#1C1C1E"
+                android:textColorHint="#C7C7CC"
+                android:inputType="number"
+                android:background="@android:color/transparent"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:fontFamily="monospace"
+                android:singleLine="true"
+                android:textCursorDrawable="@null"
+                android:layout_marginBottom="8dp" />
+        </LinearLayout>
+
+        <!-- Connect Button -->
+        <Button
+            android:id="@+id/btnConnect"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginTop="16dp"
+            android:text="Connect"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#007AFF"
+            android:stateListAnimator="@null"
+            style="@style/Widget.MaterialComponents.Button" />
+
+        <Button
+            android:id="@+id/btnBack"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="8dp"
+            android:text="Back"
+            android:textSize="15sp"
+            android:textColor="#007AFF"
+            android:backgroundTint="@android:color/transparent"
+            android:stateListAnimator="@null"
+            style="@style/Widget.MaterialComponents.Button.TextButton" />
+
+        <!-- Help -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="28dp"
+            android:background="@drawable/bg_glass_card"
+            android:padding="16dp">
+
+            <TextView
+                android:text="HOW TO FIND YOUR MAC'S IP"
+                android:textSize="11sp"
+                android:textColor="#8E8E93"
+                android:textStyle="bold"
+                android:letterSpacing="0.05"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp" />
+
+            <TextView android:text="1  Open AirClipboard on your Mac"
+                android:textSize="13sp" android:textColor="#3C3C43" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="6dp" android:lineSpacingMultiplier="1.3"/>
+            <TextView android:text="2  Click the Connect tab"
+                android:textSize="13sp" android:textColor="#3C3C43" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="6dp" android:lineSpacingMultiplier="1.3"/>
+            <TextView android:text="3  Copy the IP address shown there"
+                android:textSize="13sp" android:textColor="#3C3C43" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="6dp" android:lineSpacingMultiplier="1.3"/>
+            <TextView android:text="4  Paste it above and tap Connect"
+                android:textSize="13sp" android:textColor="#3C3C43" android:layout_width="wrap_content" android:layout_height="wrap_content" android:lineSpacingMultiplier="1.3"/>
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

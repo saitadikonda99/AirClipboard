@@ -63,6 +63,14 @@ class ClipboardSyncService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForeground(NOTIF_ID, buildNotification("Searching for devices…"))
+        // Try manual IP first, fall back to mDNS discovery
+        val prefs = getSharedPreferences("clippr_connect", MODE_PRIVATE)
+        val manualIp = prefs.getString("manual_ip", null)
+        val manualPort = prefs.getInt("manual_port", 8585)
+        if (!manualIp.isNullOrEmpty()) {
+            Log.d(TAG, "Using manual IP: $manualIp:$manualPort")
+            connectTo(manualIp, manualPort)
+        }
         startDiscovery()
         startClipboardListener()
         return START_STICKY

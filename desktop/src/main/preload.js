@@ -4,6 +4,7 @@ contextBridge.exposeInMainWorld('clippr', {
   getHistory: () => ipcRenderer.invoke('get-history'),
   getDevices: () => ipcRenderer.invoke('get-devices'),
   getDeviceInfo: () => ipcRenderer.invoke('get-device-info'),
+  getConnectInfo: () => ipcRenderer.invoke('get-connect-info'),
   clearHistory: () => ipcRenderer.invoke('clear-history'),
   removeDevice: (id) => ipcRenderer.invoke('remove-device', id),
   acceptPair: () => ipcRenderer.send('pair-accept'),

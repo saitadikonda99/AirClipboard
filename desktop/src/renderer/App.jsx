@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import './styles.css';
 
 const { clippr } = window;
@@ -10,20 +10,27 @@ function timeAgo(ts) {
   return `${Math.floor(diff / 3600000)}h ago`;
 }
 
-function CopyIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="9" y="9" width="13" height="13" rx="2"/>
-      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-    </svg>
+// Minimal QR code generator (pure JS, no library)
+function QRCode({ value, size = 160 }) {
+  const [url, setUrl] = useState('');
+  useEffect(() => {
+    // Use a data URI canvas approach via Google Charts API equivalent
+    // We'll encode using a simple pattern for the connection string
+    const encoded = encodeURIComponent(value);
+    setUrl(`https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encoded}&bgcolor=ffffff&color=1c1c1e&margin=10`);
+  }, [value, size]);
+  return url ? (
+    <img src={url} width={size} height={size} style={{ borderRadius: 12, display: 'block' }} alt="QR" />
+  ) : (
+    <div style={{ width: size, height: size, background: 'rgba(120,120,128,0.1)', borderRadius: 12 }} />
   );
 }
 
-function DeviceIcon() {
+function CopyIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="5" y="2" width="14" height="20" rx="2"/>
-      <line x1="12" y1="18" x2="12.01" y2="18"/>
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="9" y="9" width="13" height="13" rx="2"/>
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
     </svg>
   );
 }
@@ -33,13 +40,16 @@ export default function App() {
   const [history, setHistory] = useState([]);
   const [devices, setDevices] = useState([]);
   const [deviceInfo, setDeviceInfo] = useState(null);
+  const [connectInfo, setConnectInfo] = useState(null);
   const [pairRequest, setPairRequest] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
+  const [ipCopied, setIpCopied] = useState(false);
 
   useEffect(() => {
     clippr.getHistory().then(setHistory);
     clippr.getDevices().then(setDevices);
     clippr.getDeviceInfo().then(setDeviceInfo);
+    clippr.getConnectInfo().then(setConnectInfo);
     clippr.on('history-update', setHistory);
     clippr.on('devices-update', setDevices);
     clippr.on('pair-request', (req) => { setPairRequest(req); setView('pair'); });
@@ -53,16 +63,25 @@ export default function App() {
     setTimeout(() => setCopiedId(null), 1500);
   }
 
+  function handleCopyIP() {
+    if (connectInfo) {
+      navigator.clipboard?.writeText(`${connectInfo.ip}:${connectInfo.port}`);
+      setIpCopied(true);
+      setTimeout(() => setIpCopied(false), 1500);
+    }
+  }
+
   async function handleRemoveDevice(id) {
     await clippr.removeDevice(id);
     clippr.getDeviceInfo().then(setDeviceInfo);
   }
 
   const isConnected = devices.length > 0;
+  const qrValue = connectInfo ? `airclipboard://${connectInfo.ip}:${connectInfo.port}` : '';
 
   return (
     <div className="app">
-      {/* ── Title Bar ── */}
+      {/* Title Bar */}
       <div className="titlebar">
         <div className="titlebar-left">
           <div className="app-icon">
@@ -77,21 +96,22 @@ export default function App() {
         </div>
         <div className="tab-group">
           <button className={`tab ${view === 'history' ? 'active' : ''}`} onClick={() => setView('history')}>History</button>
+          <button className={`tab ${view === 'connect' ? 'active' : ''}`} onClick={() => setView('connect')}>Connect</button>
           <button className={`tab ${view === 'settings' ? 'active' : ''}`} onClick={() => setView('settings')}>Devices</button>
         </div>
       </div>
 
-      {/* ── Status Bar ── */}
+      {/* Status Bar */}
       <div className={`status-bar ${isConnected ? 'on' : 'off'}`}>
         <span className={`pulse-dot ${isConnected ? 'on' : 'off'}`} />
         <span className="status-text">
           {isConnected
             ? `Connected · ${devices.map(d => d.deviceName).join(', ')}`
-            : 'Searching for devices on local network…'}
+            : 'Not connected · Open Connect tab to pair'}
         </span>
       </div>
 
-      {/* ── Pair View ── */}
+      {/* Pair Request */}
       {view === 'pair' && pairRequest && (
         <div className="pair-view">
           <div className="pair-glass">
@@ -110,7 +130,7 @@ export default function App() {
         </div>
       )}
 
-      {/* ── History View ── */}
+      {/* History View */}
       {view === 'history' && (
         <div className="scroll-view">
           {history.length === 0 ? (
@@ -124,7 +144,7 @@ export default function App() {
                 </svg>
               </div>
               <p className="empty-title">Nothing here yet</p>
-              <p className="empty-sub">Copy something on your Mac or Android<br/>and it'll appear here instantly</p>
+              <p className="empty-sub">Go to <strong>Connect</strong> to pair your Android,<br/>then copy something to see it appear here</p>
             </div>
           ) : (
             <>
@@ -135,9 +155,7 @@ export default function App() {
               <div className="history-list">
                 {history.map((item, i) => (
                   <div key={item.id || i} className="history-card" onClick={() => handleCopyItem(item.content, item.id || i)}>
-                    <div className={`dir-badge ${item.direction}`}>
-                      {item.direction === 'received' ? '↓' : '↑'}
-                    </div>
+                    <div className={`dir-badge ${item.direction}`}>{item.direction === 'received' ? '↓' : '↑'}</div>
                     <div className="card-body">
                       <p className="card-text">{item.content?.slice(0, 180)}{item.content?.length > 180 ? '…' : ''}</p>
                       <p className="card-meta">{item.source} · {timeAgo(item.timestamp)}</p>
@@ -153,7 +171,59 @@ export default function App() {
         </div>
       )}
 
-      {/* ── Devices View ── */}
+      {/* Connect View */}
+      {view === 'connect' && (
+        <div className="scroll-view">
+          {isConnected ? (
+            <div className="connected-banner">
+              <span className="connected-check">✓</span>
+              <div>
+                <p className="connected-title">Connected</p>
+                <p className="connected-sub">{devices.map(d => d.deviceName).join(', ')}</p>
+              </div>
+            </div>
+          ) : null}
+
+          <div className="section-header" style={{ marginTop: isConnected ? 20 : 0 }}>
+            <span className="section-label">Scan QR on your Android</span>
+          </div>
+
+          <div className="qr-card">
+            {connectInfo && <QRCode value={qrValue} size={164} />}
+            <p className="qr-hint">Open AirClipboard on Android → tap <strong>Scan QR</strong></p>
+          </div>
+
+          <div className="section-header" style={{ marginTop: 20 }}>
+            <span className="section-label">Or enter manually on Android</span>
+          </div>
+
+          <div className="glass-card">
+            <div className="info-row">
+              <span className="info-key">IP Address</span>
+              <span className="info-val mono">{connectInfo?.ip}</span>
+            </div>
+            <div className="divider" />
+            <div className="info-row">
+              <span className="info-key">Port</span>
+              <span className="info-val mono">{connectInfo?.port}</span>
+            </div>
+          </div>
+
+          <button className="copy-ip-btn" onClick={handleCopyIP}>
+            {ipCopied ? '✓ Copied!' : `Copy ${connectInfo?.ip}:${connectInfo?.port}`}
+          </button>
+
+          <div className="steps-card">
+            <p className="steps-title">How to connect</p>
+            <div className="step"><span className="step-n">1</span><span>Both devices on same Wi-Fi</span></div>
+            <div className="step"><span className="step-n">2</span><span>Open AirClipboard on Android</span></div>
+            <div className="step"><span className="step-n">3</span><span>Tap <strong>Scan QR</strong> or enter IP manually</span></div>
+            <div className="step"><span className="step-n">4</span><span>Accept pair request here on Mac</span></div>
+          </div>
+        </div>
+      )}
+
+      {/* Devices View */}
       {view === 'settings' && deviceInfo && (
         <div className="scroll-view">
           <div className="section-header">
@@ -166,8 +236,8 @@ export default function App() {
             </div>
             <div className="divider" />
             <div className="info-row">
-              <span className="info-key">Device ID</span>
-              <span className="info-val mono">{deviceInfo.deviceId}</span>
+              <span className="info-key">IP Address</span>
+              <span className="info-val mono">{connectInfo?.ip}</span>
             </div>
           </div>
 
@@ -176,18 +246,14 @@ export default function App() {
           </div>
           {Object.values(deviceInfo.trustedDevices || {}).length === 0 ? (
             <div className="glass-card">
-              <div className="info-row">
-                <span className="info-val" style={{ color: '#8e8e93' }}>No paired devices yet</span>
-              </div>
+              <div className="info-row"><span className="info-val" style={{ color: '#8e8e93' }}>No paired devices</span></div>
             </div>
           ) : (
             <div className="glass-card">
               {Object.values(deviceInfo.trustedDevices).map((d, i, arr) => (
                 <React.Fragment key={d.deviceId}>
                   <div className="info-row">
-                    <span className="info-key" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <DeviceIcon />{d.deviceName}
-                    </span>
+                    <span className="info-key">{d.deviceName}</span>
                     <button className="remove-btn" onClick={() => handleRemoveDevice(d.deviceId)}>Remove</button>
                   </div>
                   {i < arr.length - 1 && <div className="divider" />}
