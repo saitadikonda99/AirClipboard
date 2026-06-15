@@ -70,6 +70,15 @@ class MainActivity : AppCompatActivity() {
         loadHistory()
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Re-bind if ConnectActivity restarted the service and broke our binding
+        if (!serviceBound) {
+            startAndBindService()
+        }
+        loadHistory()
+    }
+
     private fun requestPermissionsIfNeeded() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {

@@ -18,7 +18,7 @@ function start(callbacks = {}) {
   onPairRequest = callbacks.onPairRequest || (() => {});
   onClipboardReceived = callbacks.onClipboardReceived || (() => {});
 
-  wss = new WebSocketServer({ port: PORT });
+  wss = new WebSocketServer({ port: PORT, host: '0.0.0.0' });
 
   wss.on('connection', (ws) => {
     ws.clientId = uuidv4();
