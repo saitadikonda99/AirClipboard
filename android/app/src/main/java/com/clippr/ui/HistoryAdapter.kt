@@ -12,7 +12,10 @@ import com.clippr.database.ClipboardEntry
 import java.text.SimpleDateFormat
 import java.util.*
 
-class HistoryAdapter : ListAdapter<ClipboardEntry, HistoryAdapter.VH>(DIFF) {
+class HistoryAdapter(
+    private val onClick: (ClipboardEntry) -> Unit = {}
+) : ListAdapter<ClipboardEntry, HistoryAdapter.VH>(DIFF) {
+
     private val sdf = SimpleDateFormat("h:mm a", Locale.getDefault())
 
     inner class VH(v: View) : RecyclerView.ViewHolder(v) {
@@ -28,21 +31,18 @@ class HistoryAdapter : ListAdapter<ClipboardEntry, HistoryAdapter.VH>(DIFF) {
 
     override fun onBindViewHolder(holder: VH, position: Int) {
         val item = getItem(position)
-        holder.content.text = if (item.content.length > 200) item.content.take(200) + "…" else item.content
-
+        holder.content.text = item.content
         val time = sdf.format(Date(item.timestamp))
         val source = item.source.ifEmpty { "Unknown" }
-        holder.meta.text = "$source  ·  $time"
-
         if (item.direction == "received") {
-            holder.badge.text = "↓  From Mac"
-            holder.badge.setBackgroundResource(R.drawable.bg_badge_received)
-            holder.badge.setTextColor(0xFF0A84FF.toInt())
+            holder.badge.text = "↓"
+            holder.badge.setTextColor(0xFF1259C3.toInt())
         } else {
-            holder.badge.text = "↑  Sent to Mac"
-            holder.badge.setBackgroundResource(R.drawable.bg_badge_sent)
-            holder.badge.setTextColor(0xFF34C759.toInt())
+            holder.badge.text = "↑"
+            holder.badge.setTextColor(0xFF00A86B.toInt())
         }
+        holder.meta.text = "$source  ·  $time"
+        holder.itemView.setOnClickListener { onClick(item) }
     }
 
     companion object {

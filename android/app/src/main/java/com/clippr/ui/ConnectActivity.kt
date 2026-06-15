@@ -64,5 +64,9 @@ class ConnectActivity : AppCompatActivity() {
         }
 
         binding.btnBack.setOnClickListener { finish() }
+        // Also support the toolbar back gesture
+        onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() { finish() }
+        })
     }
 }

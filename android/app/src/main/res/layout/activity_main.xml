@@ -4,169 +4,272 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F2F2F7">
+    android:background="@color/colorBackground">
 
-    <!-- Header -->
+    <!-- Top App Bar -->
     <LinearLayout
-        android:id="@+id/header"
+        android:id="@+id/topBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingTop="52dp"
-        android:paddingBottom="20dp"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
-        android:background="@drawable/bg_header_gradient">
+        android:background="@color/colorPrimary"
+        android:paddingTop="48dp"
+        android:paddingBottom="0dp">
 
+        <!-- Title Row -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="56dp"
             android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:gravity="center_vertical"
+            android:paddingStart="20dp"
+            android:paddingEnd="16dp">
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="AirClipboard"
-                android:textSize="28sp"
+                android:textSize="22sp"
                 android:textStyle="bold"
                 android:textColor="#FFFFFF"
-                android:letterSpacing="-0.02"
+                android:letterSpacing="-0.01"
                 android:fontFamily="sans-serif-medium" />
 
+            <!-- Status pill -->
             <LinearLayout
                 android:id="@+id/statusChip"
                 android:layout_width="wrap_content"
-                android:layout_height="32dp"
+                android:layout_height="30dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
                 android:background="@drawable/bg_status_chip">
 
                 <View
                     android:id="@+id/statusDot"
-                    android:layout_width="7dp"
-                    android:layout_height="7dp"
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
                     android:background="@drawable/bg_dot_off" />
 
                 <TextView
                     android:id="@+id/tvStatus"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:text="Disconnected"
-                    android:textSize="12sp"
+                    android:layout_marginStart="5dp"
+                    android:text="Offline"
+                    android:textSize="11sp"
                     android:textColor="#FFFFFF"
                     android:fontFamily="sans-serif-medium" />
             </LinearLayout>
         </LinearLayout>
 
+        <!-- Device name row -->
         <TextView
             android:id="@+id/tvDeviceName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="Not connected"
-            android:textSize="13sp"
-            android:textColor="#CCFFFFFF"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:gravity="center_vertical"
+            android:text="Not connected to any device"
+            android:textSize="12sp"
+            android:textColor="#B3FFFFFF"
             android:fontFamily="sans-serif" />
+
+        <!-- Tab Strip -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tabHistory"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="History"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:background="@drawable/bg_tab_active" />
+
+            <TextView
+                android:id="@+id/tabConnect"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Connect"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#AAFFFFFF"
+                android:background="@android:color/transparent" />
+        </LinearLayout>
     </LinearLayout>
 
-    <!-- Content -->
-    <androidx.core.widget.NestedScrollView
+    <!-- History Panel -->
+    <FrameLayout
+        android:id="@+id/panelHistory"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="140dp"
-        android:layout_marginBottom="80dp"
-        android:fillViewport="true">
+        android:layout_marginTop="186dp"
+        android:layout_marginBottom="72dp">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerHistory"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp" />
+
+        <LinearLayout
+            android:id="@+id/tvEmpty"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="No clipboard history"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#1A1A1A"
+                android:layout_marginBottom="6dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Connect your Mac to start syncing"
+                android:textSize="13sp"
+                android:textColor="#6B6B6B" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- Connect Panel -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/panelConnect"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="186dp"
+        android:layout_marginBottom="72dp"
+        android:visibility="gone">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <Button
+                android:id="@+id/btnScanQr"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="Scan QR Code"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="@color/colorPrimary"
+                android:stateListAnimator="@null"
+                style="@style/Widget.MaterialComponents.Button" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="4dp"
+                android:text="IP ADDRESS"
+                android:textSize="11sp"
+                android:textColor="#6B6B6B"
+                android:letterSpacing="0.06"
+                android:fontFamily="sans-serif-medium" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:paddingTop="20dp"
-                android:paddingBottom="8dp"
-                android:gravity="center_vertical">
+                android:orientation="vertical"
+                android:background="@drawable/bg_glass_card">
 
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="HISTORY"
-                    android:textSize="11sp"
-                    android:textColor="#8E8E93"
-                    android:letterSpacing="0.06"
-                    android:fontFamily="sans-serif-medium" />
+                <EditText
+                    android:id="@+id/etIp"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:hint="192.168.x.x"
+                    android:textSize="15sp"
+                    android:textColor="#1A1A1A"
+                    android:textColorHint="#C0C0C0"
+                    android:inputType="textNoSuggestions"
+                    android:background="@android:color/transparent"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:fontFamily="monospace"
+                    android:singleLine="true" />
 
-                <Button
-                    android:id="@+id/btnClearHistory"
-                    android:layout_width="wrap_content"
-                    android:layout_height="28dp"
-                    android:text="Clear"
-                    android:textSize="11sp"
-                    android:textColor="#007AFF"
-                    android:backgroundTint="@android:color/transparent"
-                    android:minWidth="0dp"
-                    android:paddingStart="8dp"
-                    android:paddingEnd="0dp"
-                    style="@style/Widget.MaterialComponents.Button.TextButton" />
+                <View android:layout_width="match_parent" android:layout_height="0.5dp" android:background="#E8E8E8" android:layout_marginStart="16dp" />
+
+                <EditText
+                    android:id="@+id/etPort"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:hint="8585"
+                    android:text="8585"
+                    android:textSize="15sp"
+                    android:textColor="#1A1A1A"
+                    android:textColorHint="#C0C0C0"
+                    android:inputType="number"
+                    android:background="@android:color/transparent"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:fontFamily="monospace"
+                    android:singleLine="true" />
             </LinearLayout>
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recyclerHistory"
+            <Button
+                android:id="@+id/btnConnect"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:clipToPadding="false" />
-
-            <TextView
-                android:id="@+id/tvEmpty"
-                android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:gravity="center"
-                android:text="No clipboard history yet\nCopy something on your Mac"
-                android:textSize="14sp"
-                android:textColor="#C7C7CC"
-                android:lineSpacingMultiplier="1.5"
-                android:visibility="gone" />
+                android:layout_height="52dp"
+                android:layout_marginTop="12dp"
+                android:text="Connect"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="@color/colorPrimary"
+                android:stateListAnimator="@null"
+                style="@style/Widget.MaterialComponents.Button" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Bottom Bar -->
+    <!-- Bottom Action Bar -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="72dp"
         android:layout_gravity="bottom"
         android:orientation="horizontal"
-        android:gravity="center"
+        android:gravity="center_vertical"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
         android:paddingBottom="8dp"
-        android:background="@drawable/bg_bottom_bar"
+        android:background="@color/colorBackground"
         android:elevation="8dp">
 
         <Button
-            android:id="@+id/btnConnect"
+            android:id="@+id/btnClearHistory"
             android:layout_width="0dp"
             android:layout_height="44dp"
             android:layout_weight="1"
-            android:text="Connect"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#007AFF"
-            android:stateListAnimator="@null"
-            style="@style/Widget.MaterialComponents.Button" />
+            android:text="Clear History"
+            android:textSize="13sp"
+            android:textColor="@color/colorPrimary"
+            android:backgroundTint="@android:color/transparent"
+            app:strokeColor="@color/colorDivider"
+            app:strokeWidth="1dp"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
 
         <Button
             android:id="@+id/btnSendToMac"
@@ -174,11 +277,11 @@
             android:layout_height="44dp"
             android:layout_weight="1"
             android:layout_marginStart="10dp"
-            android:text="Send to Mac ↑"
-            android:textSize="14sp"
+            android:text="Send to Mac"
+            android:textSize="13sp"
             android:textStyle="bold"
             android:textColor="#FFFFFF"
-            android:backgroundTint="#34C759"
+            android:backgroundTint="@color/colorPrimary"
             android:stateListAnimator="@null"
             style="@style/Widget.MaterialComponents.Button" />
     </LinearLayout>
