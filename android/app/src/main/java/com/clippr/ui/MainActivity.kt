@@ -16,6 +16,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.clippr.R
 import com.clippr.database.AppDatabase
 import com.clippr.database.ClipboardEntry
 import com.clippr.databinding.ActivityMainBinding
@@ -109,13 +110,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateStatus(status: SyncStatus) {
         if (status.connected) {
-            binding.tvStatus.text = "Connected to ${status.deviceName}"
-            binding.tvStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_dark))
-            binding.statusDot.setBackgroundResource(android.R.drawable.presence_online)
+            binding.tvStatus.text = "Connected"
+            binding.tvDeviceName.text = status.deviceName
+            binding.statusDot.setBackgroundResource(R.drawable.bg_dot_on)
         } else {
-            binding.tvStatus.text = "Searching for devices…"
-            binding.tvStatus.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray))
-            binding.statusDot.setBackgroundResource(android.R.drawable.presence_away)
+            binding.tvStatus.text = "Disconnected"
+            binding.tvDeviceName.text = "Searching for devices…"
+            binding.statusDot.setBackgroundResource(R.drawable.bg_dot_off)
         }
     }
 

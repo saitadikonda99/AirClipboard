@@ -7,7 +7,6 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.clippr.R
 import com.clippr.clipboard.ClipboardListener
 import com.clippr.database.AppDatabase
 import com.clippr.database.ClipboardEntry
@@ -18,6 +17,7 @@ import com.clippr.model.MsgType
 import com.clippr.model.SyncStatus
 import com.clippr.pairing.PairingManager
 import com.clippr.security.CryptoManager
+import com.clippr.ui.CopyToClipboardActivity
 import com.clippr.ui.MainActivity
 import com.clippr.websocket.ClipprWebSocketClient
 import kotlinx.coroutines.*
@@ -35,6 +35,7 @@ class ClipboardSyncService : Service() {
     private var wsClient: ClipprWebSocketClient? = null
     private val triedHosts = mutableSetOf<String>()
     private var clipboardListenerStarted = false
+    private var lastConnectAttempt = 0L
 
     var statusCallback: ((SyncStatus) -> Unit)? = null
     var historyCallback: (() -> Unit)? = null
@@ -63,7 +64,7 @@ class ClipboardSyncService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // Handle text sent from ShareActivity — don't restart the connection
+        // Handle text sent from ShareActivity or "Send to Mac" button — don't restart connection
         val sendText = intent?.getStringExtra("send_text")
         if (!sendText.isNullOrEmpty()) {
             scope.launch {
@@ -84,9 +85,13 @@ class ClipboardSyncService : Service() {
             return START_STICKY
         }
 
+        // Debounce: ignore rapid re-starts (< 800ms apart) to avoid double connections
+        val now = System.currentTimeMillis()
+        if (now - lastConnectAttempt < 800) return START_STICKY
+        lastConnectAttempt = now
+
         startForeground(NOTIF_ID, buildNotification("Searching for devices…"))
 
-        // Disconnect any existing client and reset state
         wsClient?.disconnect()
         wsClient = null
         triedHosts.clear()
@@ -99,7 +104,7 @@ class ClipboardSyncService : Service() {
 
         if (!manualIp.isNullOrEmpty()) {
             Log.d(TAG, "Connecting to manual IP: $manualIp:$manualPort")
-            triedHosts.add(manualIp) // prevent NSD from double-connecting same host
+            triedHosts.add(manualIp)
             connectTo(manualIp, manualPort)
         }
 
@@ -157,7 +162,6 @@ class ClipboardSyncService : Service() {
                 updateNotification("Connected to ${msg.deviceName}")
             }
             MsgType.PAIR_REJECT -> {
-                Log.d(TAG, "Pair rejected")
                 wsClient?.disconnect()
                 wsClient = null
                 updateStatus(SyncStatus(false))
@@ -169,7 +173,7 @@ class ClipboardSyncService : Service() {
                     if (msg.source == pairingManager.getMyDeviceId()) return
                     // Try direct set (works on Android <10 or when app is foreground)
                     try { clipboardListener.setClipboard(text) } catch (_: Exception) {}
-                    // Always show notification so user can copy on Android 10+/12+
+                    // Always show notification for reliable delivery on Android 10+/12+
                     showReceivedNotification(text)
                     scope.launch {
                         db.clipboardDao().insert(
@@ -184,7 +188,14 @@ class ClipboardSyncService : Service() {
                         withContext(Dispatchers.Main) { historyCallback?.invoke() }
                     }
                 } catch (e: Exception) {
-                    Log.e(TAG, "Decrypt error: ${e.message}")
+                    Log.e(TAG, "Decrypt error — key mismatch, clearing pairing: ${e.message}")
+                    // Key mismatch: wipe stored pairing and reconnect so user re-pairs cleanly
+                    wsClient?.sharedKey = null
+                    if (currentStatus.deviceId.isNotEmpty()) {
+                        pairingManager.removeDevice(currentStatus.deviceId)
+                    }
+                    updateStatus(SyncStatus(false))
+                    updateNotification("Pairing error — tap to reconnect")
                 }
             }
             MsgType.PING -> { }
@@ -211,14 +222,38 @@ class ClipboardSyncService : Service() {
         }
     }
 
+    private fun showReceivedNotification(text: String) {
+        val preview = if (text.length > 80) text.take(80) + "…" else text
+        val copyIntent = Intent(this, CopyToClipboardActivity::class.java).apply {
+            putExtra("text", text)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val copyPi = PendingIntent.getActivity(
+            this, System.currentTimeMillis().toInt(), copyIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+        val notif = NotificationCompat.Builder(this, RECV_CHANNEL_ID)
+            .setContentTitle("Clipboard from Mac")
+            .setContentText(preview)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(preview))
+            .setSmallIcon(android.R.drawable.ic_menu_share)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(copyPi)
+            .addAction(android.R.drawable.ic_menu_edit, "Tap to Copy", copyPi)
+            .setAutoCancel(true)
+            .build()
+        (getSystemService(NOTIFICATION_SERVICE) as NotificationManager)
+            .notify(System.currentTimeMillis().toInt(), notif)
+    }
+
     private fun updateStatus(status: SyncStatus) {
         currentStatus = status
         statusCallback?.invoke(status)
     }
 
     private fun updateNotification(text: String) {
-        val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        manager.notify(NOTIF_ID, buildNotification(text))
+        (getSystemService(NOTIFICATION_SERVICE) as NotificationManager)
+            .notify(NOTIF_ID, buildNotification(text))
     }
 
     private fun buildNotification(text: String): Notification {
@@ -233,35 +268,11 @@ class ClipboardSyncService : Service() {
             .build()
     }
 
-    private fun showReceivedNotification(text: String) {
-        val preview = if (text.length > 80) text.take(80) + "…" else text
-        val copyIntent = android.content.Intent(this, com.clippr.ui.CopyToClipboardActivity::class.java).apply {
-            putExtra("text", text)
-            flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
-        val copyPi = android.app.PendingIntent.getActivity(
-            this, System.currentTimeMillis().toInt(), copyIntent,
-            android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT
-        )
-        val notif = NotificationCompat.Builder(this, RECV_CHANNEL_ID)
-            .setContentTitle("Clipboard from Mac")
-            .setContentText(preview)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(preview))
-            .setSmallIcon(android.R.drawable.ic_menu_share)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .addAction(android.R.drawable.ic_menu_edit, "Tap to Copy", copyPi)
-            .setContentIntent(copyPi)
-            .setAutoCancel(true)
-            .build()
-        (getSystemService(NOTIFICATION_SERVICE) as NotificationManager)
-            .notify(System.currentTimeMillis().toInt(), notif)
-    }
-
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             nm.createNotificationChannel(
-                NotificationChannel(CHANNEL_ID, "Clipboard Sync", NotificationManager.IMPORTANCE_LOW)
+                NotificationChannel(CHANNEL_ID, "AirClipboard Sync", NotificationManager.IMPORTANCE_LOW)
             )
             nm.createNotificationChannel(
                 NotificationChannel(RECV_CHANNEL_ID, "Received Clipboard", NotificationManager.IMPORTANCE_HIGH).apply {

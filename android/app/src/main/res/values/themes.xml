@@ -8,13 +8,22 @@
         <item name="android:backgroundDimEnabled">false</item>
     </style>
 
-    <style name="Theme.Clippr" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+    <style name="Theme.Clippr" parent="Theme.MaterialComponents.Light.NoActionBar">
         <item name="colorPrimary">#007AFF</item>
         <item name="colorPrimaryVariant">#0055CC</item>
         <item name="colorOnPrimary">#FFFFFF</item>
         <item name="colorSecondary">#34C759</item>
         <item name="colorOnSecondary">#FFFFFF</item>
-        <item name="android:statusBarColor">#007AFF</item>
-        <item name="android:windowBackground">#F5F5F7</item>
+        <item name="android:statusBarColor">#0A84FF</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowBackground">#F2F2F7</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.Clippr.Medium</item>
+    </style>
+
+    <style name="ShapeAppearance.Clippr.Medium" parent="ShapeAppearance.MaterialComponents.MediumComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
     </style>
 </resources>

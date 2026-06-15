@@ -13,7 +13,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class HistoryAdapter : ListAdapter<ClipboardEntry, HistoryAdapter.VH>(DIFF) {
-    private val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+    private val sdf = SimpleDateFormat("h:mm a", Locale.getDefault())
 
     inner class VH(v: View) : RecyclerView.ViewHolder(v) {
         val content: TextView = v.findViewById(R.id.tv_content)
@@ -28,15 +28,21 @@ class HistoryAdapter : ListAdapter<ClipboardEntry, HistoryAdapter.VH>(DIFF) {
 
     override fun onBindViewHolder(holder: VH, position: Int) {
         val item = getItem(position)
-        holder.content.text = if (item.content.length > 120) item.content.take(120) + "…" else item.content
-        holder.meta.text = "${item.source}  •  ${sdf.format(Date(item.timestamp))}"
-        holder.badge.text = if (item.direction == "received") "↓" else "↑"
-        holder.badge.setBackgroundColor(
-            if (item.direction == "received") 0xFFE3F2FD.toInt() else 0xFFE8F5E9.toInt()
-        )
-        holder.badge.setTextColor(
-            if (item.direction == "received") 0xFF1976D2.toInt() else 0xFF388E3C.toInt()
-        )
+        holder.content.text = if (item.content.length > 200) item.content.take(200) + "…" else item.content
+
+        val time = sdf.format(Date(item.timestamp))
+        val source = item.source.ifEmpty { "Unknown" }
+        holder.meta.text = "$source  ·  $time"
+
+        if (item.direction == "received") {
+            holder.badge.text = "↓  From Mac"
+            holder.badge.setBackgroundResource(R.drawable.bg_badge_received)
+            holder.badge.setTextColor(0xFF0A84FF.toInt())
+        } else {
+            holder.badge.text = "↑  Sent to Mac"
+            holder.badge.setBackgroundResource(R.drawable.bg_badge_sent)
+            holder.badge.setTextColor(0xFF34C759.toInt())
+        }
     }
 
     companion object {
