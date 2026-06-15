@@ -1,6 +1,7 @@
 package com.clippr.ui
 
 import android.Manifest
+import android.content.ClipboardManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -9,7 +10,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
-import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -56,6 +56,20 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnConnect.setOnClickListener {
             startActivity(android.content.Intent(this, ConnectActivity::class.java))
+        }
+
+        binding.btnSendToMac.setOnClickListener {
+            val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val text = cm.primaryClip?.getItemAt(0)?.text?.toString()
+            if (text.isNullOrEmpty()) {
+                Toast.makeText(this, "Nothing in clipboard to send", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            val si = Intent(this, com.clippr.service.ClipboardSyncService::class.java).apply {
+                putExtra("send_text", text)
+            }
+            startService(si)
+            Toast.makeText(this, "✓ Sent to Mac", Toast.LENGTH_SHORT).show()
         }
 
         binding.btnClearHistory.setOnClickListener {

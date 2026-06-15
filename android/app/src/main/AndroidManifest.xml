@@ -36,6 +36,26 @@
             android:name=".ui.ConnectActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".ui.CopyToClipboardActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Transparent"
+            android:noHistory="true"
+            android:excludeFromRecents="true" />
+
+        <activity
+            android:name=".ui.ShareActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Transparent"
+            android:noHistory="true"
+            android:excludeFromRecents="true">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
         <service
             android:name=".service.ClipboardSyncService"
             android:enabled="true"

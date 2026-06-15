@@ -87,9 +87,20 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Connect to Mac"
+            android:text="Connect"
             android:textSize="13sp"
             android:backgroundTint="#007AFF"
+            style="@style/Widget.MaterialComponents.Button" />
+
+        <Button
+            android:id="@+id/btnSendToMac"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:text="Send to Mac"
+            android:textSize="13sp"
+            android:backgroundTint="#34C759"
             style="@style/Widget.MaterialComponents.Button" />
 
         <Button

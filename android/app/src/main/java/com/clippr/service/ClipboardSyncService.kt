@@ -44,6 +44,7 @@ class ClipboardSyncService : Service() {
 
     companion object {
         const val CHANNEL_ID = "clippr_sync"
+        const val RECV_CHANNEL_ID = "clippr_recv"
         const val NOTIF_ID = 1
         private const val TAG = "ClipprService"
     }
@@ -62,6 +63,27 @@ class ClipboardSyncService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // Handle text sent from ShareActivity — don't restart the connection
+        val sendText = intent?.getStringExtra("send_text")
+        if (!sendText.isNullOrEmpty()) {
+            scope.launch {
+                val client = wsClient ?: return@launch
+                if (!client.isConnected()) return@launch
+                client.sendClipboard(sendText)
+                db.clipboardDao().insert(
+                    ClipboardEntry(
+                        id = UUID.randomUUID().toString(),
+                        content = sendText,
+                        timestamp = System.currentTimeMillis(),
+                        source = pairingManager.getMyDeviceName(),
+                        direction = "sent"
+                    )
+                )
+                withContext(Dispatchers.Main) { historyCallback?.invoke() }
+            }
+            return START_STICKY
+        }
+
         startForeground(NOTIF_ID, buildNotification("Searching for devices…"))
 
         // Disconnect any existing client and reset state
@@ -145,7 +167,10 @@ class ClipboardSyncService : Service() {
                 try {
                     val text = CryptoManager.decrypt(msg.payload, key)
                     if (msg.source == pairingManager.getMyDeviceId()) return
-                    clipboardListener.setClipboard(text)
+                    // Try direct set (works on Android <10 or when app is foreground)
+                    try { clipboardListener.setClipboard(text) } catch (_: Exception) {}
+                    // Always show notification so user can copy on Android 10+/12+
+                    showReceivedNotification(text)
                     scope.launch {
                         db.clipboardDao().insert(
                             ClipboardEntry(
@@ -208,10 +233,41 @@ class ClipboardSyncService : Service() {
             .build()
     }
 
+    private fun showReceivedNotification(text: String) {
+        val preview = if (text.length > 80) text.take(80) + "…" else text
+        val copyIntent = android.content.Intent(this, com.clippr.ui.CopyToClipboardActivity::class.java).apply {
+            putExtra("text", text)
+            flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val copyPi = android.app.PendingIntent.getActivity(
+            this, System.currentTimeMillis().toInt(), copyIntent,
+            android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT
+        )
+        val notif = NotificationCompat.Builder(this, RECV_CHANNEL_ID)
+            .setContentTitle("Clipboard from Mac")
+            .setContentText(preview)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(preview))
+            .setSmallIcon(android.R.drawable.ic_menu_share)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .addAction(android.R.drawable.ic_menu_edit, "Tap to Copy", copyPi)
+            .setContentIntent(copyPi)
+            .setAutoCancel(true)
+            .build()
+        (getSystemService(NOTIFICATION_SERVICE) as NotificationManager)
+            .notify(System.currentTimeMillis().toInt(), notif)
+    }
+
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(CHANNEL_ID, "Clipboard Sync", NotificationManager.IMPORTANCE_LOW)
-            (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(channel)
+            val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            nm.createNotificationChannel(
+                NotificationChannel(CHANNEL_ID, "Clipboard Sync", NotificationManager.IMPORTANCE_LOW)
+            )
+            nm.createNotificationChannel(
+                NotificationChannel(RECV_CHANNEL_ID, "Received Clipboard", NotificationManager.IMPORTANCE_HIGH).apply {
+                    description = "Shown when Mac sends clipboard content"
+                }
+            )
         }
     }
 
