@@ -8,16 +8,16 @@ let currentDevices = [];
 function createTray(win, callbacks = {}) {
   mainWindow = win;
 
-  // Use a simple template image; replace with actual icon in production
   const iconPath = path.join(__dirname, '../../../assets/tray-icon.png');
   let icon;
   try {
     icon = nativeImage.createFromPath(iconPath);
+    icon.setTemplateImage(true); // renders correctly in dark/light menu bar
   } catch {
     icon = nativeImage.createEmpty();
   }
 
-  tray = new Tray(icon.resize({ width: 16, height: 16 }));
+  tray = new Tray(icon.resize({ width: 18, height: 18 }));
   tray.setToolTip('Clippr');
   updateMenu(callbacks);
   tray.on('click', () => {

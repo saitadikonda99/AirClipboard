@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, Notification } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 
 const wsServer = require('./websocket/server');
@@ -7,9 +7,9 @@ const clipboardMonitor = require('./clipboard/monitor');
 const trayManager = require('./tray/tray');
 const history = require('./history/history');
 const pairing = require('./pairing/pairing');
+const { showHUD } = require('./notification/hudWindow');
 
 app.setName('Clippr');
-// Keep app running when all windows are closed (tray app)
 app.on('window-all-closed', (e) => e.preventDefault());
 
 let mainWindow = null;
@@ -17,10 +17,13 @@ let pendingPairWs = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 420,
-    height: 600,
+    width: 400,
+    height: 560,
     show: false,
     titleBarStyle: 'hiddenInset',
+    vibrancy: 'under-window',
+    visualEffectState: 'active',
+    backgroundColor: '#00000000',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -28,7 +31,6 @@ function createWindow() {
     },
   });
 
-  const rendererPath = path.join(__dirname, '../../dist/renderer.js');
   mainWindow.loadFile(path.join(__dirname, '../../src/renderer/index.html'));
 
   mainWindow.on('close', (e) => {
@@ -40,31 +42,29 @@ function createWindow() {
 app.whenReady().then(() => {
   createWindow();
 
-  // Start WebSocket server
   wsServer.start({
-    onStatusChange: (info) => {
+    onStatusChange: () => {
       const devices = wsServer.getConnectedDevices();
       trayManager.setDevices(devices);
       if (mainWindow) mainWindow.webContents.send('devices-update', devices);
     },
-    onPairRequest: ({ deviceId, deviceName, code, ws, sharedKey }) => {
+    onPairRequest: ({ deviceId, deviceName, code, ws }) => {
       pendingPairWs = ws;
       if (mainWindow) {
         mainWindow.show();
         mainWindow.webContents.send('pair-request', { deviceId, deviceName, code });
       }
-      // Also show notification
-      new Notification({ title: 'Clippr', body: `Pair request from ${deviceName}` }).show();
+      showHUD({ from: 'Clippr', text: `Pair request from ${deviceName}` });
     },
     onClipboardReceived: (entry) => {
+      // Show HUD notification like macOS battery alert
+      showHUD({ from: entry.source, text: entry.content });
       if (mainWindow) mainWindow.webContents.send('history-update', history.getHistory());
     },
   });
 
-  // Advertise via mDNS
   bonjour.advertise();
 
-  // Start clipboard monitor
   clipboardMonitor.startMonitoring((text) => {
     wsServer.broadcastClipboard(text);
     history.addEntry({
@@ -78,11 +78,9 @@ app.whenReady().then(() => {
     if (mainWindow) mainWindow.webContents.send('history-update', history.getHistory());
   });
 
-  // Create tray
   trayManager.createTray(mainWindow);
 });
 
-// IPC handlers
 ipcMain.handle('get-history', () => history.getHistory());
 ipcMain.handle('get-devices', () => wsServer.getConnectedDevices());
 ipcMain.handle('get-device-info', () => ({
@@ -94,17 +92,10 @@ ipcMain.handle('clear-history', () => { history.clearHistory(); return true; });
 ipcMain.handle('remove-device', (_, deviceId) => { pairing.removeDevice(deviceId); return true; });
 
 ipcMain.on('pair-accept', () => {
-  if (pendingPairWs) {
-    wsServer.acceptPairing(pendingPairWs);
-    pendingPairWs = null;
-  }
+  if (pendingPairWs) { wsServer.acceptPairing(pendingPairWs); pendingPairWs = null; }
 });
-
 ipcMain.on('pair-reject', () => {
-  if (pendingPairWs) {
-    wsServer.rejectPairing(pendingPairWs);
-    pendingPairWs = null;
-  }
+  if (pendingPairWs) { wsServer.rejectPairing(pendingPairWs); pendingPairWs = null; }
 });
 
 app.on('before-quit', () => {
