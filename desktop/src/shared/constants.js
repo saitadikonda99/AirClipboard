@@ -1,4 +1,4 @@
-const SERVICE_NAME = 'Clippr';
+const SERVICE_NAME = 'AirClipboard';
 const SERVICE_TYPE = '_clippr._tcp';
 const PORT = 8585;
 const POLL_INTERVAL_MS = 300;

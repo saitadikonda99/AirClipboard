@@ -9,7 +9,7 @@ const history = require('./history/history');
 const pairing = require('./pairing/pairing');
 const { showHUD } = require('./notification/hudWindow');
 
-app.setName('Clippr');
+app.setName('AirClipboard');
 app.on('window-all-closed', (e) => e.preventDefault());
 
 let mainWindow = null;

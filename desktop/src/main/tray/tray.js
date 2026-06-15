@@ -18,7 +18,7 @@ function createTray(win, callbacks = {}) {
   }
 
   tray = new Tray(icon.resize({ width: 18, height: 18 }));
-  tray.setToolTip('Clippr');
+  tray.setToolTip('AirClipboard');
   updateMenu(callbacks);
   tray.on('click', () => {
     if (mainWindow) {
@@ -35,7 +35,7 @@ function updateMenu(callbacks = {}) {
     : currentDevices.map(d => ({ label: `✓ ${d.deviceName}`, enabled: false }));
 
   const menu = Menu.buildFromTemplate([
-    { label: 'Clippr', enabled: false },
+    { label: 'AirClipboard', enabled: false },
     { type: 'separator' },
     { label: 'Connected:', enabled: false },
     ...deviceItems,

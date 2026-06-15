@@ -1,5 +1,5 @@
 {
-  "name": "clippr",
+  "name": "airclipboard",
   "version": "1.0.0",
   "description": "Universal Clipboard sync between Android and macOS",
   "main": "src/main/index.js",
@@ -43,8 +43,8 @@
     "ws": "^8.16.0"
   },
   "build": {
-    "appId": "com.clippr.app",
-    "productName": "Clippr",
+    "appId": "com.airclipboard.app",
+    "productName": "AirClipboard",
     "mac": {
       "target": "dmg",
       "category": "public.app-category.utilities"

@@ -107,7 +107,7 @@
   </div>
   <script>
     const params = new URLSearchParams(window.location.search);
-    document.getElementById('from').textContent = params.get('from') || 'Clipboard';
+    document.getElementById('from').textContent = params.get('from') || 'AirClipboard';
     const text = params.get('text') || '';
     document.getElementById('content').textContent = text.length > 60 ? text.slice(0, 60) + '…' : text;
 
