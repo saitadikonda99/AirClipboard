@@ -71,7 +71,7 @@ AirClipboard lives in your Mac menu bar. When you copy something on Android, it 
 
 ## Install
 
-> **Prebuilt downloads:** grab the latest `.dmg` / `.apk` from the [Releases page](https://github.com/saitadikonda99/AirClipboard/releases/latest), or see the [download page](website/index.html) for a guided install. New releases are built automatically by [`.github/workflows/release.yml`](.github/workflows/release.yml) whenever a `v*.*.*` tag is pushed.
+> **Prebuilt downloads:** grab the latest `.dmg` / `.apk` from the [Releases page](https://github.com/saitadikonda99/AirClipboard/releases/latest), or run the [download page](website/) locally (`cd website && npm install && npm run dev`) for a guided install. New releases are built automatically by [`.github/workflows/release.yml`](.github/workflows/release.yml) whenever a `v*.*.*` tag is pushed.
 
 ### Mac
 
@@ -183,12 +183,20 @@ AirClipboard/
 │   ├── webpack.renderer.config.cjs
 │   ├── babel.config.json
 │   └── package.json
-└── android/                     # Android app (Kotlin + Jetpack Compose)
-    └── app/src/main/
-        └── java/com/airclipboard/
-            ├── MainActivity.kt
-            ├── ClipboardService.kt
-            ├── WebSocketManager.kt
-            ├── DiscoveryManager.kt
-            └── ui/
+├── android/                      # Android app (Kotlin + Jetpack Compose)
+│   └── app/src/main/
+│       └── java/com/airclipboard/
+│           ├── MainActivity.kt
+│           ├── ClipboardService.kt
+│           ├── WebSocketManager.kt
+│           ├── DiscoveryManager.kt
+│           └── ui/
+└── website/                     # Download / marketing page (Next.js, static export)
+    ├── app/
+    │   ├── layout.jsx            # Root layout + metadata
+    │   ├── page.jsx              # Assembles the sections below
+    │   └── globals.css
+    ├── components/               # Nav, Hero, HowItWorks, Download, Closing, etc.
+    ├── public/fonts/              # Self-hosted Fraunces variable font
+    └── package.json
 ```
