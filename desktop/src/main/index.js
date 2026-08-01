@@ -35,6 +35,10 @@ function createWindow() {
     frame: false,
     resizable: false,
     skipTaskbar: true,
+    transparent: true,
+    hasShadow: true,
+    vibrancy: 'popover',
+    visualEffectState: 'active',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

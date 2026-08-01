@@ -18,7 +18,7 @@ function QRCode({ value, size = 160 }) {
   return dataUrl ? (
     <img src={dataUrl} width={size} height={size} style={{ borderRadius: 10, display: 'block' }} alt="QR" />
   ) : (
-    <div style={{ width: size, height: size, background: '#F0F0F0', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: '#9B9B9B' }}>
+    <div style={{ width: size, height: size, background: 'var(--bg-fill)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: 'var(--label-tertiary)' }}>
       Loading…
     </div>
   );
@@ -91,12 +91,23 @@ export default function App() {
       {/* ── Top App Bar ── */}
       <div className="titlebar">
         <div className="titlebar-inner">
+          <span className="app-glyph">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+              <rect x="8" y="2" width="8" height="4" rx="1"/>
+            </svg>
+          </span>
           <span className="app-name">AirClipboard</span>
           <div className="status-pill">
             <span className={`pulse-dot ${isConnected ? 'on' : 'off'}`} />
             <span className="status-text">{isConnected ? 'Online' : 'Offline'}</span>
           </div>
-          <button className="close-btn" onClick={() => window.close()} title="Close">✕</button>
+          <button className="close-btn" onClick={() => window.close()} title="Close">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+              <line x1="4" y1="4" x2="20" y2="20"/>
+              <line x1="20" y1="4" x2="4" y2="20"/>
+            </svg>
+          </button>
         </div>
         <div className="device-name-row">
           {isConnected
@@ -262,7 +273,7 @@ export default function App() {
             <div className="info-row">
               <div>
                 <div className="info-key">Launch at Login</div>
-                <div style={{ fontSize: 11, color: '#9B9B9B', marginTop: 2 }}>Start AirClipboard when your Mac boots</div>
+                <div style={{ fontSize: 11, color: 'var(--label-tertiary)', marginTop: 2 }}>Start AirClipboard when your Mac boots</div>
               </div>
               <button
                 className={`toggle-btn ${loginItem ? 'on' : ''}`}
@@ -279,7 +290,7 @@ export default function App() {
           <div className="info-card">
             {Object.values(deviceInfo.trustedDevices || {}).length === 0 ? (
               <div className="info-row">
-                <span className="info-val" style={{ color: '#9B9B9B' }}>No paired devices</span>
+                <span className="info-val" style={{ color: 'var(--label-tertiary)' }}>No paired devices</span>
               </div>
             ) : (
               Object.values(deviceInfo.trustedDevices).map((d) => (
