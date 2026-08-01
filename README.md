@@ -71,6 +71,8 @@ AirClipboard lives in your Mac menu bar. When you copy something on Android, it 
 
 ## Install
 
+> **Prebuilt downloads:** grab the latest `.dmg` / `.apk` from the [Releases page](https://github.com/saitadikonda99/AirClipboard/releases/latest), or see the [download page](website/index.html) for a guided install. New releases are built automatically by [`.github/workflows/release.yml`](.github/workflows/release.yml) whenever a `v*.*.*` tag is pushed.
+
 ### Mac
 
 **Requirements:** macOS 10.15+, Node.js 18+, npm

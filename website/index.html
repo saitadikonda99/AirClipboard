@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AirClipboard — one clipboard, every device</title>
+<meta name="description" content="Clipboard sync between Mac and Android over your local Wi-Fi. No cloud, no accounts, end-to-end encrypted." />
+<style>
+
+  :root{
+    --bg: #08090b;
+    --bg-raised: #111319;
+    --bg-raised-2: #15171e;
+    --line: rgba(255,255,255,0.09);
+    --line-soft: rgba(255,255,255,0.05);
+    --text: #f2f3f5;
+    --text-dim: #9aa1ac;
+    --text-faint: #565c68;
+    --accent: #3f83ff;
+    --accent-bright: #6ea1ff;
+    --accent-dim: #1d3f80;
+    --accent-glow: rgba(63,131,255,0.35);
+    --mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", sans-serif;
+  }
+
+  *,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
+
+  html{ scroll-behavior:smooth; }
+
+  body{
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* ── atmosphere ── */
+  body::before{
+    content:"";
+    position: fixed; inset: 0;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(255,255,255,0.055) 1px, transparent 0);
+    background-size: 28px 28px;
+    pointer-events: none;
+    z-index: 0;
+    mask-image: radial-gradient(ellipse 90% 60% at 50% 0%, black 0%, transparent 75%);
+  }
+
+  .glow-top{
+    position: absolute;
+    top: -280px; left: 50%;
+    transform: translateX(-50%);
+    width: 900px; height: 560px;
+    background: radial-gradient(ellipse at center, var(--accent-glow) 0%, transparent 68%);
+    filter: blur(10px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap{ max-width: 1120px; margin: 0 auto; padding: 0 32px; position: relative; z-index: 1; }
+
+  a{ color: inherit; text-decoration: none; }
+
+  ::selection{ background: var(--accent); color: #04070d; }
+
+  /* ── nav ── */
+  nav{
+    position: sticky; top: 0; z-index: 20;
+    background: rgba(8,9,11,0.72);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .nav-inner{
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; font-weight: 600; font-size: 14.5px; letter-spacing: -0.2px; }
+  .brand-glyph{
+    width: 26px; height: 26px; border-radius: 7px;
+    background: linear-gradient(155deg, var(--accent), #1f4faa);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.08) inset, 0 4px 14px rgba(63,131,255,0.28);
+  }
+  .nav-links{ display:flex; align-items:center; gap: 28px; font-size: 13.5px; color: var(--text-dim); }
+  .nav-links a{ position: relative; transition: color 0.15s; }
+  .nav-links a:hover{ color: var(--text); }
+  .nav-cta{
+    padding: 7px 15px; border-radius: 7px;
+    background: var(--bg-raised); border: 1px solid var(--line);
+    color: var(--text) !important; font-weight: 500;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .nav-cta:hover{ border-color: var(--accent); background: var(--bg-raised-2); }
+
+  /* ── hero ── */
+  header.hero{ padding: 108px 0 96px; position: relative; }
+
+  .kicker{
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 12px; color: var(--accent-bright);
+    background: rgba(63,131,255,0.09);
+    border: 1px solid rgba(63,131,255,0.25);
+    padding: 5px 12px; border-radius: 100px;
+    margin-bottom: 28px;
+    opacity: 0; animation: rise 0.7s 0.05s ease forwards;
+  }
+  .kicker .dot{ width:6px; height:6px; border-radius:50%; background: var(--accent-bright); box-shadow: 0 0 8px var(--accent); }
+
+  .hero-grid{ display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 40px; align-items: center; }
+
+  h1{
+    font-family: var(--mono);
+    font-size: 58px;
+    line-height: 1.04;
+    font-weight: 500;
+    letter-spacing: -1.5px;
+    color: var(--text);
+    opacity: 0; animation: rise 0.7s 0.15s ease forwards;
+  }
+  h1 .accent{ color: var(--accent-bright); }
+  h1 .cursor{
+    display:inline-block; width: 0.5ch; background: var(--accent-bright);
+    animation: blink 1s step-end infinite;
+    margin-left: 2px; height: 0.85em; transform: translateY(0.1em);
+  }
+
+  .sub{
+    margin-top: 24px; font-size: 17px; line-height: 1.65; color: var(--text-dim);
+    max-width: 46ch;
+    opacity: 0; animation: rise 0.7s 0.25s ease forwards;
+  }
+  .sub strong{ color: var(--text); font-weight: 600; }
+
+  .cta-row{
+    margin-top: 36px; display: flex; gap: 12px; flex-wrap: wrap;
+    opacity: 0; animation: rise 0.7s 0.35s ease forwards;
+  }
+
+  .btn{
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 13px 22px; border-radius: 10px;
+    font-size: 14.5px; font-weight: 600; letter-spacing: -0.1px;
+    transition: transform 0.15s, box-shadow 0.2s, background 0.15s, border-color .15s;
+    border: 1px solid transparent;
+    cursor: pointer;
+  }
+  .btn svg{ flex-shrink: 0; }
+  .btn-primary{
+    background: linear-gradient(155deg, var(--accent-bright), var(--accent));
+    color: #04070d;
+    box-shadow: 0 8px 24px rgba(63,131,255,0.35), inset 0 1px 0 rgba(255,255,255,0.35);
+  }
+  .btn-primary:hover{ transform: translateY(-2px); box-shadow: 0 12px 32px rgba(63,131,255,0.5), inset 0 1px 0 rgba(255,255,255,0.4); }
+  .btn-primary:active{ transform: translateY(0); }
+  .btn-secondary{
+    background: var(--bg-raised);
+    border-color: var(--line);
+    color: var(--text);
+  }
+  .btn-secondary:hover{ border-color: var(--accent); background: var(--bg-raised-2); transform: translateY(-2px); }
+
+  .req-line{
+    margin-top: 18px; font-family: var(--mono); font-size: 11.5px; color: var(--text-faint);
+    opacity: 0; animation: rise 0.7s 0.45s ease forwards;
+  }
+
+  /* ── hero device animation ── */
+  .sync-panel{
+    position: relative; height: 380px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background:
+      radial-gradient(circle at 30% 20%, rgba(63,131,255,0.10), transparent 55%),
+      var(--bg-raised);
+    overflow: hidden;
+    opacity: 0; animation: rise 0.8s 0.3s ease forwards;
+  }
+  .sync-panel::after{
+    content:""; position:absolute; inset:0;
+    background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0);
+    background-size: 20px 20px;
+  }
+
+  .device{ position: absolute; z-index: 2; filter: drop-shadow(0 12px 24px rgba(0,0,0,0.5)); }
+  .device-mac{ top: 54px; left: 34px; width: 168px; animation: float 5s ease-in-out infinite; }
+  .device-phone{ bottom: 40px; right: 46px; width: 76px; animation: float 5s 0.4s ease-in-out infinite; }
+
+  .device-mac .screen{ fill: #1c1f27; stroke: rgba(255,255,255,0.14); }
+  .device-phone .screen{ fill: #1c1f27; stroke: rgba(255,255,255,0.14); }
+  .device-mac .body, .device-phone .body{ fill: #2a2d36; }
+
+  .clip-line{
+    position: absolute; z-index: 1;
+    left: 96px; top: 132px; width: 130px; height: 130px;
+  }
+  .clip-path{
+    fill: none; stroke: var(--accent); stroke-width: 2; stroke-dasharray: 4 6;
+    opacity: 0.55;
+    animation: dash 1.4s linear infinite;
+  }
+  .clip-pulse{
+    fill: var(--accent-bright);
+    filter: drop-shadow(0 0 6px var(--accent));
+    offset-path: path('M4,4 C 70,4 90,120 126,126');
+    animation: travel 2.6s cubic-bezier(.5,0,.5,1) infinite;
+  }
+
+  .badge-pill{
+    position: absolute; top: 18px; right: 18px; z-index: 3;
+    font-family: var(--mono); font-size: 10.5px; color: var(--text-dim);
+    background: rgba(255,255,255,0.04); border: 1px solid var(--line);
+    padding: 4px 9px; border-radius: 100px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .badge-pill .dot{ width:5px; height:5px; border-radius:50%; background:#34c759; box-shadow:0 0 6px #34c759; }
+
+  @keyframes rise{ from{ opacity:0; transform: translateY(14px);} to{ opacity:1; transform: translateY(0);} }
+  @keyframes blink{ 50%{ opacity:0; } }
+  @keyframes float{ 0%,100%{ transform: translateY(0);} 50%{ transform: translateY(-8px);} }
+  @keyframes dash{ to{ stroke-dashoffset: -20; } }
+  @keyframes travel{
+    0%{ offset-distance: 0%; opacity: 0; }
+    8%{ opacity: 1; }
+    45%{ offset-distance: 100%; opacity: 1; }
+    52%{ opacity: 0; }
+    100%{ offset-distance: 100%; opacity: 0; }
+  }
+
+  /* ── section shell ── */
+  section{ padding: 88px 0; border-top: 1px solid var(--line-soft); position: relative; }
+  .eyebrow{
+    font-family: var(--mono); font-size: 12px; color: var(--accent-bright);
+    letter-spacing: 0.3px; margin-bottom: 14px;
+  }
+  h2{
+    font-size: 32px; letter-spacing: -0.8px; font-weight: 650; max-width: 22ch;
+  }
+  .section-head{ display:flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; margin-bottom: 52px; }
+  .section-note{ color: var(--text-dim); font-size: 14.5px; max-width: 34ch; line-height: 1.6; }
+
+  /* ── feature grid ── */
+  .grid-4{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+  .feature{ background: var(--bg); padding: 30px 26px; transition: background 0.2s; }
+  .feature:hover{ background: var(--bg-raised); }
+  .feature-icon{
+    width: 38px; height: 38px; border-radius: 10px;
+    background: rgba(63,131,255,0.1); border: 1px solid rgba(63,131,255,0.22);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--accent-bright); margin-bottom: 20px;
+  }
+  .feature h3{ font-size: 15px; font-weight: 600; margin-bottom: 8px; letter-spacing: -0.1px; }
+  .feature p{ font-size: 13.5px; color: var(--text-dim); line-height: 1.6; }
+
+  /* ── how it works ── */
+  .steps{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+  .step{ position: relative; padding-top: 8px; }
+  .step-num{
+    font-family: var(--mono); font-size: 46px; font-weight: 600;
+    color: transparent; -webkit-text-stroke: 1px var(--line);
+    line-height: 1; margin-bottom: 22px; display: block;
+  }
+  .step h3{ font-size: 16.5px; font-weight: 600; margin-bottom: 10px; letter-spacing: -0.1px; }
+  .step p{ font-size: 14px; color: var(--text-dim); line-height: 1.65; max-width: 32ch; }
+  .step-line{ position:absolute; top: 26px; left: -16px; width: 1px; height: 40px; background: var(--line); }
+  .step:first-child .step-line{ display:none; }
+
+  /* ── platforms / download ── */
+  .platforms{ display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .platform-card{
+    border: 1px solid var(--line); border-radius: 16px; padding: 34px;
+    background: linear-gradient(180deg, var(--bg-raised), var(--bg));
+    display: flex; flex-direction: column; gap: 18px;
+  }
+  .platform-top{ display:flex; align-items:center; justify-content: space-between; }
+  .platform-icon{
+    width: 44px; height: 44px; border-radius: 12px;
+    background: var(--bg-raised-2); border: 1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; color: var(--text);
+  }
+  .platform-version{ font-family: var(--mono); font-size: 11px; color: var(--text-faint); }
+  .platform-card h3{ font-size: 20px; font-weight: 650; letter-spacing: -0.3px; }
+  .platform-card .desc{ font-size: 13.5px; color: var(--text-dim); line-height: 1.6; }
+  .platform-reqs{ font-family: var(--mono); font-size: 11.5px; color: var(--text-faint); border-top: 1px solid var(--line-soft); padding-top: 16px; margin-top: auto; }
+
+  /* ── footer ── */
+  footer{ border-top: 1px solid var(--line-soft); padding: 48px 0 64px; }
+  .footer-row{ display:flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 18px; }
+  .footer-brand{ display:flex; align-items:center; gap:10px; color: var(--text-dim); font-size: 13px; }
+  .footer-links{ display:flex; gap: 24px; font-size: 13px; color: var(--text-dim); }
+  .footer-links a:hover{ color: var(--text); }
+
+  @media (max-width: 860px){
+    h1{ font-size: 40px; }
+    .hero-grid{ grid-template-columns: 1fr; }
+    .sync-panel{ order: -1; height: 300px; }
+    .grid-4{ grid-template-columns: 1fr 1fr; }
+    .steps{ grid-template-columns: 1fr; }
+    .platforms{ grid-template-columns: 1fr; }
+    .nav-links{ display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="glow-top"></div>
+
+<nav>
+  <div class="wrap nav-inner">
+    <div class="brand">
+      <span class="brand-glyph">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+          <rect x="8" y="2" width="8" height="4" rx="1"/>
+        </svg>
+      </span>
+      AirClipboard
+    </div>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#download">Download</a>
+      <a href="https://github.com/saitadikonda99/AirClipboard" class="nav-cta">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="kicker"><span class="dot"></span>Local Wi-Fi · no cloud · no accounts</span>
+      <h1>Copy on one.<br>Paste on the <span class="accent">other</span><span class="cursor"></span></h1>
+      <p class="sub">AirClipboard mirrors your clipboard between <strong>Mac</strong> and <strong>Android</strong> in real time, entirely over your own Wi-Fi. Nothing touches the internet.</p>
+      <div class="cta-row">
+        <a href="https://github.com/saitadikonda99/AirClipboard/releases/latest/download/AirClipboard.dmg" class="btn btn-primary">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.9-1.99 1.57-3.014 1.57-.12 0-.23-.02-.3-.03-.01-.06-.04-.22-.04-.39 0-1.15.572-2.27 1.206-2.98.804-.94 2.14-1.64 3.14-1.68.03.13.03.19.03.13-.03.13.155.16.155.3zM20.5 17.28c-.5 1.15-.74 1.67-1.38 2.68-.9 1.42-2.17 3.18-3.75 3.2-1.4.02-1.76-.91-3.66-.9-1.9.01-2.3.92-3.7.9-1.58-.02-2.78-1.6-3.68-3.02C1.9 17.03.9 13.5 2.28 11.15c.98-1.66 2.65-2.7 4.4-2.72 1.55-.02 3.02 1.06 3.97 1.06.94 0 2.7-1.3 4.58-1.11.78.03 2.96.31 4.36 2.37-.11.07-2.6 1.53-2.58 4.56.03 3.6 3.17 4.8 3.2 4.82-.02.08-.5 1.72-1.71 3.15z"/></svg>
+          Download for Mac
+        </a>
+        <a href="https://github.com/saitadikonda99/AirClipboard/releases/latest/download/AirClipboard.apk" class="btn btn-secondary">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 9.48l1.84-3.18c.16-.31.03-.69-.26-.85-.28-.14-.61-.04-.78.22l-1.86 3.22a11.5 11.5 0 0 0-8.98 0L5.7 5.67a.638.638 0 0 0-.87-.2.615.615 0 0 0-.22.83L6.44 9.48A11 11 0 0 0 1 18h22a11 11 0 0 0-5.4-8.52zM7 15.25a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5zm10 0a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5z"/></svg>
+          Download for Android
+        </a>
+      </div>
+      <div class="req-line">macOS 10.15+ · Android 8.0+ · both devices, one Wi-Fi network</div>
+    </div>
+
+    <div class="sync-panel">
+      <span class="badge-pill"><span class="dot"></span>synced</span>
+      <svg class="device device-mac" viewBox="0 0 168 108" fill="none">
+        <rect class="screen" x="1" y="1" width="166" height="94" rx="7" stroke-width="2"/>
+        <rect x="14" y="14" width="140" height="68" rx="2" fill="#0e1015"/>
+        <rect x="22" y="24" width="70" height="6" rx="3" fill="#3f83ff" opacity="0.7"/>
+        <rect x="22" y="36" width="100" height="5" rx="2.5" fill="#464b57"/>
+        <rect x="22" y="46" width="84" height="5" rx="2.5" fill="#33373f"/>
+        <path class="body" d="M0 96h168l-10 11H10L0 96z"/>
+      </svg>
+      <svg class="device device-phone" viewBox="0 0 76 150" fill="none">
+        <rect class="screen" x="1" y="1" width="74" height="148" rx="14" stroke-width="2"/>
+        <rect x="10" y="14" width="56" height="122" rx="4" fill="#0e1015"/>
+        <rect x="17" y="26" width="42" height="6" rx="3" fill="#3f83ff" opacity="0.7"/>
+        <rect x="17" y="38" width="30" height="5" rx="2.5" fill="#464b57"/>
+        <circle cx="38" cy="10" r="1.6" fill="#565c68"/>
+      </svg>
+      <svg class="clip-line" viewBox="0 0 130 130">
+        <path class="clip-path" d="M4,4 C 70,4 90,120 126,126"/>
+        <circle class="clip-pulse" r="4"/>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<section id="features">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">/ features</div>
+        <h2>Everything you'd want, nothing you didn't ask for</h2>
+      </div>
+      <p class="section-note">No sign-up, no server, no telemetry. AirClipboard is a WebSocket handshake between two devices on the same network — that's the whole product.</p>
+    </div>
+    <div class="grid-4">
+      <div class="feature">
+        <div class="feature-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+        </div>
+        <h3>Zero cloud</h3>
+        <p>Clipboard data never leaves your Wi-Fi network. There is no server to trust — because there is no server.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <h3>AES-256 encrypted</h3>
+        <p>Every pairing generates a unique shared key. Content is encrypted end-to-end with AES-GCM, always.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <h3>Instant</h3>
+        <p>Copy and it's already on the other device. A live WebSocket connection, not a polling sync job.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
+        </div>
+        <h3>Full history</h3>
+        <p>Browse and re-copy anything you've synced recently — stored locally, cleared whenever you want.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">/ how it works</div>
+        <h2>Paired in under a minute</h2>
+      </div>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <span class="step-num">01</span>
+        <h3>Open both apps</h3>
+        <p>AirClipboard sits quietly in your Mac menu bar and advertises itself over mDNS — Android finds it automatically.</p>
+      </div>
+      <div class="step">
+        <div class="step-line"></div>
+        <span class="step-num">02</span>
+        <h3>Scan or confirm</h3>
+        <p>Scan the QR code on Mac, or connect manually by IP. Accept the one-time pairing code and you're trusted.</p>
+      </div>
+      <div class="step">
+        <div class="step-line"></div>
+        <span class="step-num">03</span>
+        <h3>Copy anywhere</h3>
+        <p>From then on, every copy on either device shows up on the other — automatically, silently, instantly.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="download">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">/ download</div>
+        <h2>Get AirClipboard</h2>
+      </div>
+      <p class="section-note">Free and open source. Builds are produced straight from this repository's release workflow.</p>
+    </div>
+    <div class="platforms">
+      <div class="platform-card">
+        <div class="platform-top">
+          <div class="platform-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.9-1.99 1.57-3.014 1.57-.12 0-.23-.02-.3-.03-.01-.06-.04-.22-.04-.39 0-1.15.572-2.27 1.206-2.98.804-.94 2.14-1.64 3.14-1.68.03.13.03.19.03.13-.03.13.155.16.155.3zM20.5 17.28c-.5 1.15-.74 1.67-1.38 2.68-.9 1.42-2.17 3.18-3.75 3.2-1.4.02-1.76-.91-3.66-.9-1.9.01-2.3.92-3.7.9-1.58-.02-2.78-1.6-3.68-3.02C1.9 17.03.9 13.5 2.28 11.15c.98-1.66 2.65-2.7 4.4-2.72 1.55-.02 3.02 1.06 3.97 1.06.94 0 2.7-1.3 4.58-1.11.78.03 2.96.31 4.36 2.37-.11.07-2.6 1.53-2.58 4.56.03 3.6 3.17 4.8 3.2 4.82-.02.08-.5 1.72-1.71 3.15z"/></svg>
+          </div>
+          <span class="platform-version">macOS · arm64</span>
+        </div>
+        <h3>AirClipboard for Mac</h3>
+        <p class="desc">Runs from the menu bar with zero dock clutter. Optional launch-at-login.</p>
+        <a href="https://github.com/saitadikonda99/AirClipboard/releases/latest/download/AirClipboard.dmg" class="btn btn-primary" style="align-self:flex-start;">
+          Download .dmg
+        </a>
+        <div class="platform-reqs">requires macOS 10.15 or later</div>
+      </div>
+      <div class="platform-card">
+        <div class="platform-top">
+          <div class="platform-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 9.48l1.84-3.18c.16-.31.03-.69-.26-.85-.28-.14-.61-.04-.78.22l-1.86 3.22a11.5 11.5 0 0 0-8.98 0L5.7 5.67a.638.638 0 0 0-.87-.2.615.615 0 0 0-.22.83L6.44 9.48A11 11 0 0 0 1 18h22a11 11 0 0 0-5.4-8.52zM7 15.25a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5zm10 0a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5z"/></svg>
+          </div>
+          <span class="platform-version">Android · API 26+</span>
+        </div>
+        <h3>AirClipboard for Android</h3>
+        <p class="desc">Native Kotlin app with a foreground sync service and QR pairing.</p>
+        <a href="https://github.com/saitadikonda99/AirClipboard/releases/latest/download/AirClipboard.apk" class="btn btn-primary" style="align-self:flex-start;">
+          Download .apk
+        </a>
+        <div class="platform-reqs">enable "install from unknown sources" to sideload</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap footer-row">
+    <div class="footer-brand">
+      <span class="brand-glyph" style="width:22px;height:22px;">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+          <rect x="8" y="2" width="8" height="4" rx="1"/>
+        </svg>
+      </span>
+      AirClipboard — MIT licensed, built for local networks.
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/saitadikonda99/AirClipboard">GitHub</a>
+      <a href="https://github.com/saitadikonda99/AirClipboard/releases">Releases</a>
+      <a href="https://github.com/saitadikonda99/AirClipboard#readme">Docs</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
