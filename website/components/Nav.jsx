@@ -1,4 +1,3 @@
-import { ClipboardGlyph } from './icons';
 import SplitButton from './SplitButton';
 import { REPO_URL } from './links';
 
@@ -7,9 +6,7 @@ export default function Nav() {
     <nav>
       <div className="wrap nav-inner">
         <div className="brand">
-          <span className="brand-glyph">
-            <ClipboardGlyph />
-          </span>
+          <span className="brand-glyph">A</span>
           AirClipboard
         </div>
         <div className="nav-links">

@@ -93,6 +93,7 @@ nav {
 .brand-glyph {
   width: 28px; height: 28px; border: 1px solid var(--ink);
   display: flex; align-items: center; justify-content: center; background: var(--accent);
+  font-family: var(--serif); font-weight: 700; font-size: 15px; color: #fff; line-height: 1;
 }
 .nav-links { display: flex; align-items: center; gap: 34px; }
 .nav-links a.navlink { font-size: 14px; color: var(--ink-soft); transition: color .15s; }
